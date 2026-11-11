@@ -1,1 +1,256 @@
-/* Base page and game styling. */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 20rem;
+  background: #f3f6f9;
+  color: #17212f;
+  font: 1rem/1.5 system-ui, sans-serif;
+}
+
+.app {
+  width: min(100% - 2rem, 46rem);
+  margin: 2rem auto;
+}
+
+h1 {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  line-height: 1.2;
+}
+
+.plot-intro {
+  margin: 0 0 1rem;
+  color: #425166;
+}
+
+.game-status {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 1.25rem 0;
+}
+
+.game-status div {
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #d5dde6;
+  border-radius: 0.4rem;
+  background: #fff;
+}
+
+.game-status dt {
+  color: #425166;
+  font-size: 0.875rem;
+}
+
+.game-status dd {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.storage-notice,
+.input-error {
+  color: #b42318;
+}
+
+.round-prompt {
+  margin: 1.25rem 0 0;
+  text-align: center;
+}
+
+button {
+  min-height: 2.75rem;
+  padding: 0.55rem 1rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: #174f78;
+  color: #fff;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #103c5d;
+}
+
+button:focus-visible {
+  outline: 3px solid #005b94;
+  outline-offset: 3px;
+}
+
+input:focus-visible {
+  outline: 3px solid #005b94;
+  outline-offset: 2px;
+}
+
+.plot-container {
+  width: min(100%, 38rem);
+  margin: 1rem auto 0;
+  padding: 0.65rem;
+  border: 1px solid #d5dde6;
+  border-radius: 0.5rem;
+  background: #fff;
+  box-shadow: 0 0.25rem 1rem rgb(23 33 47 / 8%);
+}
+
+.scatterplot {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.plot-tick-label {
+  fill: #344256;
+  font: 13px system-ui, sans-serif;
+}
+
+.plot-axis-label {
+  fill: #17212f;
+  font: 600 16px system-ui, sans-serif;
+}
+
+.plot-point {
+  transition: opacity 120ms ease;
+}
+
+.regression-line {
+  vector-effect: non-scaling-stroke;
+}
+
+.outlier-marker {
+  vector-effect: non-scaling-stroke;
+}
+
+.guess-form,
+.resolution,
+.game-over {
+  margin: 1rem auto;
+  padding: 1rem;
+  border: 1px solid #d5dde6;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.guess-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.guess-form label {
+  font-weight: 650;
+}
+
+.guess-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6rem;
+  align-items: center;
+  gap: 1rem;
+}
+
+.guess-controls input[type="range"] {
+  width: 100%;
+  min-height: 2.75rem;
+  accent-color: #174f78;
+}
+
+.guess-controls input[type="text"] {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid #8997a8;
+  border-radius: 0.35rem;
+  color: inherit;
+  font: inherit;
+  text-align: right;
+}
+
+.guess-controls input[aria-invalid="true"] {
+  border-color: #b42318;
+}
+
+.input-error {
+  min-height: 1.5em;
+  margin: 0;
+}
+
+.coefficients {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.coefficient {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.7rem;
+  border: 1px solid #d5dde6;
+  border-radius: 0.35rem;
+}
+
+.coefficient-highlighted {
+  border-color: #174f78;
+  background: #eaf3f9;
+}
+
+.coefficient strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.regression-slope {
+  font-weight: 650;
+}
+
+.group-results {
+  padding-left: 0.75rem;
+  border-left: 3px solid #d5dde6;
+}
+
+.group-results p {
+  margin: 0.35rem 0;
+}
+
+.scenario-explanation {
+  max-width: 42rem;
+  color: #344256;
+}
+
+.game-over {
+  text-align: center;
+}
+
+.game-over h2 {
+  margin-top: 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 30rem) {
+  .app {
+    width: min(100% - 1rem, 46rem);
+    margin: 1rem auto;
+  }
+
+  .plot-container {
+    padding: 0.25rem;
+  }
+
+  .plot-tick-label {
+    font-size: 22px;
+  }
+
+  .plot-axis-label {
+    font-size: 26px;
+  }
+
+  .game-status {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

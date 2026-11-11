@@ -3,15 +3,48 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="./css/style.css">
     <title></title>
   </head>
   <body>
-    <h1 id="app-title"></h1>
-    <script type="module">
-      import { APP_TITLE } from "./js/texts.js";
-
-      document.title = APP_TITLE;
-      document.getElementById("app-title").textContent = APP_TITLE;
-    </script>
+    <main id="app" class="app">
+      <h1 id="app-title"></h1>
+      <dl class="game-status" aria-live="polite">
+        <div><dt id="lives-label"></dt><dd id="lives-value"></dd></div>
+        <div><dt id="coins-label"></dt><dd id="coins-value"></dd></div>
+        <div><dt id="round-label"></dt><dd id="round-value"></dd></div>
+        <div><dt id="average-error-label"></dt><dd id="average-error-value"></dd></div>
+      </dl>
+      <p id="storage-notice" class="storage-notice" role="status"></p>
+      <h2 id="round-prompt" class="round-prompt"></h2>
+      <div id="plot" class="plot-container"></div>
+      <form id="guess-form" class="guess-form">
+        <label id="guess-label" for="guess-slider"></label>
+        <div class="guess-controls">
+          <input id="guess-slider" type="range" min="-1" max="1" step="0.01" value="0">
+          <input id="guess-input" type="text" inputmode="decimal" autocomplete="off" value="0.00"
+            aria-describedby="input-error">
+        </div>
+        <p id="input-error" class="input-error" aria-live="polite"></p>
+        <button id="submit-guess" type="submit"></button>
+      </form>
+      <section id="resolution" class="resolution" aria-live="polite" hidden>
+        <h2 id="resolution-title"></h2>
+        <div id="coefficients" class="coefficients"></div>
+        <p id="guess-result"></p>
+        <p id="regression-slope" class="regression-slope"></p>
+        <div id="group-results" class="group-results"></div>
+        <p id="scenario-explanation" class="scenario-explanation"></p>
+        <button id="continue-button" type="button"></button>
+      </section>
+      <section id="game-over" class="game-over" aria-live="polite" hidden>
+        <h2 id="game-over-title"></h2>
+        <p id="game-over-message"></p>
+        <p><span id="game-over-coins-label"></span>: <strong id="game-over-coins"></strong></p>
+        <p><span id="highscore-label"></span>: <strong id="highscore-value"></strong></p>
+        <button id="new-game-button" type="button"></button>
+      </section>
+    </main>
+    <script type="module" src="./js/main.js"></script>
   </body>
 </html>

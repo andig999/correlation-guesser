@@ -17,6 +17,19 @@
     <ul id="results"></ul>
     <script type="module">
       import { createRng } from "./js/rng.js";
+      import {
+        colorizeGroups,
+        drawGroupRegressionLines,
+        markOutlier,
+        renderPlot,
+      } from "./js/plot.js";
+      import {
+        advanceRound,
+        createGameState,
+        resolveRound,
+        startRound,
+      } from "./js/game.js";
+      import { explanationFor } from "./js/texts.js";
       import { linearRegression, mean, pearson, ranks, spearman } from "./js/stats.js";
       import {
         createScenario,
@@ -117,6 +130,7 @@
       for (const [type, generate] of generators) {
         let valid = true;
         let detail = "";
+        const overallSigns = new Set();
         for (let seed = 0; seed < 200 && valid; seed += 1) {
           const rng = createRng(seed);
           const n = rng.integer(20, 150);
@@ -155,6 +169,7 @@
           } else if (type === "uform") {
             valid = valid && Math.abs(r) < 0.15 && Math.abs(rho) < 0.15;
           } else if (type === "simpson") {
+            overallSigns.add(Math.sign(r));
             const groupRs = scenario.groups.map((group) => {
               const points = scenario.points.filter((point) => point.group === group);
               return pearson(
@@ -168,6 +183,10 @@
           if (!valid) detail = `Seed ${seed}: r=${r}, ρ=${rho}`;
         }
         check(`${type}: 200 Seeds erfüllen die Generatorbedingungen`, valid, detail);
+        if (type === "simpson") {
+          check("Simpson: Spiegelung liefert beide Gesamttrendrichtungen",
+            overallSigns.has(-1) && overallSigns.has(1), JSON.stringify([...overallSigns]));
+        }
       }
 
       const roundTypes = ["normal", "uform", "simpson"];
@@ -200,6 +219,68 @@
       check("Monoton/Ausreißer fragen in 70 % der Fälle Spearman",
         spearmanCount / (scenarioCounts.monoton + scenarioCounts.ausreisser) > 0.65
           && spearmanCount / (scenarioCounts.monoton + scenarioCounts.ausreisser) < 0.75);
+
+      const exactScenario = {
+        type: "normal",
+        coefficient: "pearson",
+        points: [{ x: 5, y: 5 }, { x: 50, y: 50 }, { x: 95, y: 95 }],
+      };
+      const preciseRound = resolveRound(startRound(createGameState(), exactScenario), 0.95);
+      check("Spielregel: Fehler 0,05 bringt 5 Münzen und ein Leben",
+        preciseRound.result.error === 0.05
+          && preciseRound.coins === 5 && preciseRound.lives === 4);
+      const closeRound = resolveRound(startRound(createGameState(), exactScenario), 0.9);
+      check("Spielregel: Fehler 0,10 bringt eine Münze, aber kein Leben",
+        closeRound.result.error === 0.1
+          && closeRound.coins === 1 && closeRound.lives === 3);
+      let losingRound = createGameState();
+      for (let round = 0; round < 3; round += 1) {
+        losingRound = startRound(losingRound, exactScenario);
+        losingRound = resolveRound(losingRound, 0.89);
+        losingRound = advanceRound(losingRound);
+      }
+      check("Drei Fehler beenden das Spiel ohne negative Leben",
+        losingRound.phase === "gameover" && losingRound.lives === 0);
+      check("Szenario-Erklärungen beschreiben die jeweilige Richtung korrekt",
+        explanationFor({ type: "simpson" }, { pearson: 0.6 }).includes("steigt")
+          && explanationFor({ type: "simpson" }, { pearson: -0.6 }).includes("fällt")
+          && explanationFor({ type: "monoton" }, { spearman: -1 }).includes("fallen"));
+
+      const plotContainer = document.createElement("div");
+      document.body.append(plotContainer);
+      const simpson = generateSimpson(createRng(2468), 60);
+      const plotSvg = renderPlot(plotContainer, simpson.points, { random: () => 0.5 });
+      check("Plot hat ein festes quadratisches Koordinatensystem",
+        plotSvg.getAttribute("viewBox") === "0 0 600 600"
+          && plotSvg.querySelectorAll(".plot-point").length === simpson.points.length
+          && [...plotSvg.querySelectorAll(".plot-tick-label")].filter(
+            (label) => ["0", "25", "50", "75", "100"].includes(label.textContent),
+          ).length === 10);
+      const crossSvg = renderPlot(plotContainer, simpson.points, { random: () => 0.99 });
+      const cross = crossSvg.querySelector(".plot-point");
+      check("Kreuzsymbol übernimmt die zufällige Rundenfarbe",
+        cross.firstElementChild.getAttribute("stroke") === "currentColor"
+          && cross.getAttribute("color") === cross.getAttribute("fill"));
+
+      const groupedSvg = renderPlot(plotContainer, simpson.points, { random: () => 0.5 });
+      colorizeGroups(groupedSvg);
+      const groupStyles = new Set([...groupedSvg.querySelectorAll(".plot-point")].map((point) => (
+        `${point.getAttribute("fill")}:${point.firstElementChild.tagName}`
+      )));
+      const groupLines = drawGroupRegressionLines(groupedSvg, simpson.points, simpson.groups);
+      check("Simpson-Auflösung unterscheidet Gruppen und zeichnet drei Regressionen",
+        groupStyles.size === 3 && groupLines.length === 3
+          && groupLines.every(({ b }) => Number.isFinite(b)));
+
+      const outlier = generateOutlier(createRng(84), 60);
+      const outlierSvg = renderPlot(plotContainer, outlier.points);
+      markOutlier(outlierSvg, outlier.outlierIndex);
+      check("Ausreißer-Markierung umschließt den angegebenen Punkt",
+        outlierSvg.querySelector(".outlier-marker")?.getAttribute("cx")
+          === outlierSvg.querySelector(
+            `.plot-point[data-index="${outlier.outlierIndex}"]`,
+          )?.getAttribute("data-x"));
+      plotContainer.remove();
 
       document.getElementById("summary").textContent = `${passed} bestanden, ${failed} fehlgeschlagen`;
     </script>
