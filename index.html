@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+  </head>
+  <body>
+    <h1 id="app-title"></h1>
+    <script type="module">
+      import { APP_TITLE } from "./js/texts.js";
+
+      document.title = APP_TITLE;
+      document.getElementById("app-title").textContent = APP_TITLE;
+    </script>
+  </body>
+</html>

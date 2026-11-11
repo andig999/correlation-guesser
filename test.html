@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Correlation Guesser – Tests</title>
+    <style>
+      body { font: 16px/1.5 system-ui, sans-serif; margin: 2rem auto; max-width: 48rem; padding: 0 1rem; }
+      .pass { color: #176b2c; }
+      .fail { color: #b42318; }
+      li { margin: 0.25rem 0; }
+    </style>
+  </head>
+  <body>
+    <h1>Statistik-, RNG- und Szenario-Tests</h1>
+    <p id="summary" aria-live="polite">Tests laufen …</p>
+    <ul id="results"></ul>
+    <script type="module">
+      import { createRng } from "./js/rng.js";
+      import { linearRegression, mean, pearson, ranks, spearman } from "./js/stats.js";
+      import {
+        createScenario,
+        generateMonotonic,
+        generateNormal,
+        generateOutlier,
+        generateSimpson,
+        generateUForm,
+        selectCoefficient,
+      } from "./js/scenarios.js";
+
+      const tolerance = 0.0001;
+      const results = document.getElementById("results");
+      let passed = 0;
+      let failed = 0;
+
+      function check(name, condition, detail = "") {
+        const item = document.createElement("li");
+        item.className = condition ? "pass" : "fail";
+        item.textContent = `${condition ? "✓" : "✗"} ${name}${detail ? ` — ${detail}` : ""}`;
+        results.append(item);
+        if (condition) passed += 1;
+        else failed += 1;
+      }
+
+      function near(actual, expected) {
+        return Number.isFinite(actual) && Math.abs(actual - expected) <= tolerance;
+      }
+
+      function checkNear(name, actual, expected) {
+        check(name, near(actual, expected), `erwartet ${expected}, erhalten ${actual}`);
+      }
+
+      function checkReference(name, x, y, expected) {
+        if (expected.r !== undefined) {
+          checkNear(`${name}: Pearson r`, pearson(x, y), expected.r);
+        }
+        if (expected.rho !== undefined) {
+          checkNear(`${name}: Spearman ρ`, spearman(x, y), expected.rho);
+        }
+        if (expected.b !== undefined) {
+          checkNear(`${name}: Regression b`, linearRegression(x, y).b, expected.b);
+        }
+        if (expected.a !== undefined) {
+          checkNear(`${name}: Regression a`, linearRegression(x, y).a, expected.a);
+        }
+      }
+
+      const sequence = [1, 2, 3, 4, 5];
+      checkNear("mean", mean(sequence), 3);
+      checkReference("Identität", sequence, sequence, { r: 1, rho: 1, a: 0, b: 1 });
+      checkReference("Negative Gerade", sequence, sequence.map((value) => -value), {
+        r: -1,
+        rho: -1,
+        a: 0,
+        b: -1,
+      });
+
+      const cubes = sequence.map((value) => value ** 3);
+      checkReference("x³", sequence, cubes, { r: 0.9431, rho: 1 });
+
+      const tiedX = [1, 2, 2, 3];
+      const tiedY = [1, 2, 3, 4];
+      check("Gemittelte Ränge bei Bindung", JSON.stringify(ranks(tiedX)) === JSON.stringify([1, 2.5, 2.5, 4]));
+      checkReference("Bindung", tiedX, tiedY, { rho: 0.9487 });
+
+      const anscombeX = [10, 8, 13, 9, 11, 14, 6, 4, 12, 7, 5];
+      const anscombeY = [8.04, 6.95, 7.58, 8.81, 8.33, 9.96, 7.24, 4.26, 10.84, 4.82, 5.68];
+      checkReference("Anscombe I", anscombeX, anscombeY, {
+        r: 0.8164,
+        rho: 0.8182,
+        b: 0.5001,
+      });
+
+      check("n < 3 ergibt NaN", Number.isNaN(pearson([1, 2], [1, 2]))
+        && Number.isNaN(spearman([1, 2], [1, 2]))
+        && Number.isNaN(linearRegression([1, 2], [1, 2]).b));
+      check("Varianz 0 ergibt NaN", Number.isNaN(pearson([1, 1, 1], [1, 2, 3]))
+        && Number.isNaN(spearman([1, 1, 1], [1, 2, 3]))
+        && Number.isNaN(linearRegression([1, 1, 1], [1, 2, 3]).b));
+
+      const firstRng = createRng(12345);
+      const secondRng = createRng(12345);
+      const firstSequence = Array.from({ length: 10 }, () => firstRng.random());
+      const secondSequence = Array.from({ length: 10 }, () => secondRng.random());
+      check("RNG liefert mit gleichem Seed dieselbe Folge", firstSequence.every(
+        (value, index) => value === secondSequence[index],
+      ));
+
+      const generators = [
+        ["normal", generateNormal],
+        ["monoton", generateMonotonic],
+        ["ausreisser", generateOutlier],
+        ["uform", generateUForm],
+        ["simpson", generateSimpson],
+      ];
+
+      for (const [type, generate] of generators) {
+        let valid = true;
+        let detail = "";
+        for (let seed = 0; seed < 200 && valid; seed += 1) {
+          const rng = createRng(seed);
+          const n = rng.integer(20, 150);
+          const scenario = generate(rng, n);
+          const x = scenario.points.map((point) => point.x);
+          const y = scenario.points.map((point) => point.y);
+          const r = pearson(x, y);
+          const rho = spearman(x, y);
+          const b = linearRegression(x, y).b;
+          valid = scenario.type === type
+            && scenario.points.length === n
+            && Number.isFinite(r)
+            && Number.isFinite(rho)
+            && Number.isFinite(b)
+            && scenario.points.every((point) => (
+              Number.isFinite(point.x) && Number.isFinite(point.y)
+                && point.x >= 5 && point.x <= 95
+                && point.y >= 5 && point.y <= 95
+            ))
+            && Math.min(...x) === 5 && Math.max(...x) === 95
+            && Math.min(...y) === 5 && Math.max(...y) === 95;
+
+          if (type === "monoton") {
+            const ordered = scenario.points.every((point, index) => (
+              index === 0 || point.x > scenario.points[index - 1].x
+            ));
+            const increasing = scenario.points.every((point, index) => (
+              index === 0 || point.y > scenario.points[index - 1].y
+            ));
+            const decreasing = scenario.points.every((point, index) => (
+              index === 0 || point.y < scenario.points[index - 1].y
+            ));
+            valid = valid && ordered && (increasing || decreasing) && Math.abs(r - rho) >= 0.15;
+          } else if (type === "ausreisser") {
+            valid = valid && scenario.outlierIndex === n - 1 && Math.abs(r - rho) >= 0.15;
+          } else if (type === "uform") {
+            valid = valid && Math.abs(r) < 0.15 && Math.abs(rho) < 0.15;
+          } else if (type === "simpson") {
+            const groupRs = scenario.groups.map((group) => {
+              const points = scenario.points.filter((point) => point.group === group);
+              return pearson(
+                points.map((point) => point.x),
+                points.map((point) => point.y),
+              );
+            });
+            valid = valid && Math.abs(r) >= 0.3
+              && groupRs.every((groupR) => Math.abs(groupR) >= 0.5 && groupR * r < 0);
+          }
+          if (!valid) detail = `Seed ${seed}: r=${r}, ρ=${rho}`;
+        }
+        check(`${type}: 200 Seeds erfüllen die Generatorbedingungen`, valid, detail);
+      }
+
+      const roundTypes = ["normal", "uform", "simpson"];
+      check("Pearson/Spearman wechseln in normalen, U-Form- und Simpson-Runden",
+        roundTypes.every((type) => (
+          selectCoefficient(type, 1, createRng(1)) === "pearson"
+            && selectCoefficient(type, 2, createRng(1)) === "spearman"
+        )));
+
+      let spearmanCount = 0;
+      let sampleSizesValid = true;
+      const scenarioCounts = { normal: 0, monoton: 0, ausreisser: 0, uform: 0, simpson: 0 };
+      for (let seed = 0; seed < 1000; seed += 1) {
+        const scenario = createScenario(seed, 1);
+        scenarioCounts[scenario.type] += 1;
+        if (scenario.type === "monoton" || scenario.type === "ausreisser") {
+          if (scenario.coefficient === "spearman") spearmanCount += 1;
+        }
+        sampleSizesValid = sampleSizesValid && scenario.n === scenario.points.length
+          && scenario.n >= 20 && scenario.n <= 150
+          && (scenario.type === "monoton" || scenario.type === "ausreisser"
+            ? scenario.coefficient === "pearson" || scenario.coefficient === "spearman"
+            : scenario.coefficient === "pearson");
+      }
+      check("Szenario-Auswahl: 75 % normal, Sonderfälle gleichverteilt",
+        scenarioCounts.normal > 700 && scenarioCounts.normal < 800
+          && Object.values(scenarioCounts).slice(1).every((count) => count > 40 && count < 90),
+        JSON.stringify(scenarioCounts));
+      check("n liegt bei allen Szenarien zwischen 20 und 150", sampleSizesValid);
+      check("Monoton/Ausreißer fragen in 70 % der Fälle Spearman",
+        spearmanCount / (scenarioCounts.monoton + scenarioCounts.ausreisser) > 0.65
+          && spearmanCount / (scenarioCounts.monoton + scenarioCounts.ausreisser) < 0.75);
+
+      document.getElementById("summary").textContent = `${passed} bestanden, ${failed} fehlgeschlagen`;
+    </script>
+  </body>
+</html>
