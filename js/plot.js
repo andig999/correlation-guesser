@@ -153,7 +153,7 @@ function addAxes(svg) {
   svg.append(xLabel, yLabel);
 }
 
-export function renderPlot(container, points, { random = Math.random } = {}) {
+export function renderPlot(container, points, { random } = {}) {
   if (!(container instanceof Element)) {
     throw new TypeError("Expected a DOM element as the plot container.");
   }

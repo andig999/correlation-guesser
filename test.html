@@ -262,6 +262,21 @@
         cross.firstElementChild.getAttribute("stroke") === "currentColor"
           && cross.getAttribute("color") === cross.getAttribute("fill"));
 
+      const seededScenario = createScenario(684, 1);
+      const seededPlot = renderPlot(plotContainer, seededScenario.points, {
+        random: createRng(seededScenario.seed).random,
+      });
+      const seededStyle = seededPlot.querySelector(".plot-point");
+      const repeatedPlot = renderPlot(plotContainer, seededScenario.points, {
+        random: createRng(seededScenario.seed).random,
+      });
+      const repeatedStyle = repeatedPlot.querySelector(".plot-point");
+      check("Szenario-Seed macht die Plot-Optik reproduzierbar",
+        seededScenario.seed === 684
+          && seededStyle.getAttribute("fill") === repeatedStyle.getAttribute("fill")
+          && seededStyle.firstElementChild.tagName === repeatedStyle.firstElementChild.tagName
+          && seededStyle.getAttribute("opacity") === repeatedStyle.getAttribute("opacity"));
+
       const groupedSvg = renderPlot(plotContainer, simpson.points, { random: () => 0.5 });
       colorizeGroups(groupedSvg);
       const groupStyles = new Set([...groupedSvg.querySelectorAll(".plot-point")].map((point) => (
@@ -273,7 +288,9 @@
           && groupLines.every(({ b }) => Number.isFinite(b)));
 
       const outlier = generateOutlier(createRng(84), 60);
-      const outlierSvg = renderPlot(plotContainer, outlier.points);
+      const outlierSvg = renderPlot(plotContainer, outlier.points, {
+        random: createRng(84).random,
+      });
       markOutlier(outlierSvg, outlier.outlierIndex);
       check("Ausreißer-Markierung umschließt den angegebenen Punkt",
         outlierSvg.querySelector(".outlier-marker")?.getAttribute("cx")

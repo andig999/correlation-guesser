@@ -195,6 +195,7 @@ export function createScenario(seed, roundNumber = 1) {
   const scenario = generators[type](rng, n);
   return {
     ...scenario,
+    seed,
     n,
     coefficient: selectCoefficient(type, roundNumber, rng),
   };

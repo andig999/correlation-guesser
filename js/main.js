@@ -12,6 +12,7 @@ import {
   markOutlier,
   renderPlot,
 } from "./plot.js";
+import { createRng } from "./rng.js";
 import { pearson } from "./stats.js";
 import { APP_TITLE, explanationFor, TEXTS } from "./texts.js";
 
@@ -23,6 +24,14 @@ if (!root) {
 
 document.title = APP_TITLE;
 document.querySelector("#app-title").textContent = APP_TITLE;
+document.querySelector("#start-highscore-label").textContent = TEXTS.highscore;
+document.querySelector("#start-button").textContent = TEXTS.startGame;
+document.querySelector("#rules-button").textContent = TEXTS.gameRules;
+document.querySelector("#rules-title").textContent = TEXTS.rulesTitle;
+document.querySelector("#rules-start").textContent = TEXTS.rulesStart;
+document.querySelector("#rules-perfect").textContent = TEXTS.rulesPerfect;
+document.querySelector("#rules-close").textContent = TEXTS.rulesClose;
+document.querySelector("#rules-miss").textContent = TEXTS.rulesMiss;
 document.querySelector("#lives-label").textContent = TEXTS.lives;
 document.querySelector("#coins-label").textContent = TEXTS.coins;
 document.querySelector("#round-label").textContent = TEXTS.round;
@@ -40,6 +49,13 @@ document.querySelector("#new-game-button").textContent = TEXTS.newGame;
 document.querySelector("#continue-button").textContent = TEXTS.continue;
 
 const elements = {
+  startScreen: document.querySelector("#start-screen"),
+  gameScreen: document.querySelector("#game-screen"),
+  startHighscore: document.querySelector("#start-highscore-value"),
+  startStorageNotice: document.querySelector("#start-storage-notice"),
+  startButton: document.querySelector("#start-button"),
+  rulesButton: document.querySelector("#rules-button"),
+  rulesCard: document.querySelector("#rules-card"),
   prompt: document.querySelector("#round-prompt"),
   lives: document.querySelector("#lives-value"),
   coins: document.querySelector("#coins-value"),
@@ -64,20 +80,26 @@ const elements = {
   newGameButton: document.querySelector("#new-game-button"),
 };
 
+function showStorageNotice(message) {
+  elements.startStorageNotice.textContent = message;
+  elements.storageNotice.textContent = message;
+}
+
 function readHighscore() {
   try {
     const stored = localStorage.getItem(HIGH_SCORE_KEY);
     if (stored === null) return 0;
     const value = Number(stored);
     if (Number.isSafeInteger(value) && value >= 0) return value;
-    elements.storageNotice.textContent = TEXTS.invalidHighscore;
+    showStorageNotice(TEXTS.invalidHighscore);
   } catch (error) {
-    elements.storageNotice.textContent = TEXTS.highscoreLoadError(error.message);
+    showStorageNotice(TEXTS.highscoreLoadError(error.message));
   }
   return 0;
 }
 
 let highscore = readHighscore();
+elements.startHighscore.textContent = String(highscore);
 let state = createGameState(highscore);
 
 function saveHighscore(value) {
@@ -86,8 +108,9 @@ function saveHighscore(value) {
   try {
     localStorage.setItem(HIGH_SCORE_KEY, String(highscore));
   } catch (error) {
-    elements.storageNotice.textContent = TEXTS.highscoreSaveError(error.message);
+    showStorageNotice(TEXTS.highscoreSaveError(error.message));
   }
+  elements.startHighscore.textContent = String(highscore);
 }
 
 function formatNumber(value) {
@@ -109,6 +132,8 @@ function updateStatus() {
 function beginRound() {
   const seed = Math.floor(Math.random() * 4294967296);
   const scenario = createScenario(seed, state.round + 1);
+  elements.startScreen.hidden = true;
+  elements.gameScreen.hidden = false;
   state = startRound(state, scenario);
   updateStatus();
   elements.prompt.textContent = scenario.coefficient === "pearson"
@@ -121,8 +146,12 @@ function beginRound() {
   elements.inputError.textContent = "";
   elements.input.value = "0.00";
   elements.slider.value = "0";
-  renderPlot(elements.plot, scenario.points);
+  renderPlot(elements.plot, scenario.points, { random: createRng(scenario.seed).random });
   elements.continueButton.textContent = TEXTS.continue;
+  if (window.matchMedia("(pointer: fine)").matches) {
+    elements.input.focus();
+    elements.input.select();
+  }
 }
 
 function appendCoefficient(label, value, highlighted) {
@@ -188,6 +217,7 @@ function renderResolution(estimate) {
   elements.resolution.hidden = false;
   elements.continueButton.textContent = state.lives === 0 ? TEXTS.finish : TEXTS.continue;
   updateStatus();
+  elements.continueButton.focus();
 }
 
 elements.slider.addEventListener("input", () => {
@@ -224,6 +254,25 @@ elements.input.addEventListener("keydown", (event) => {
   }
 });
 
+function adjustGuessWithArrowKey(event) {
+  if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) return;
+  event.preventDefault();
+  const normalized = elements.input.value.trim().replace(",", ".");
+  const current = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized)
+    ? Number(normalized)
+    : Number(elements.slider.value);
+  const step = event.shiftKey ? 0.1 : 0.01;
+  const direction = event.key === "ArrowUp" || event.key === "ArrowRight" ? 1 : -1;
+  const next = Math.max(-1, Math.min(1, Math.round((current + direction * step) * 100) / 100));
+  elements.input.value = next.toFixed(2);
+  elements.slider.value = String(next);
+  elements.inputError.textContent = "";
+  elements.input.removeAttribute("aria-invalid");
+}
+
+elements.input.addEventListener("keydown", adjustGuessWithArrowKey);
+elements.slider.addEventListener("keydown", adjustGuessWithArrowKey);
+
 elements.form.addEventListener("submit", (event) => {
   event.preventDefault();
   const normalized = elements.input.value.trim().replace(",", ".");
@@ -252,14 +301,21 @@ elements.continueButton.addEventListener("click", () => {
     elements.highscore.textContent = String(highscore);
     elements.gameOver.hidden = false;
     updateStatus();
+    elements.newGameButton.focus();
     return;
   }
   beginRound();
+});
+
+elements.startButton.addEventListener("click", beginRound);
+
+elements.rulesButton.addEventListener("click", () => {
+  const expanded = elements.rulesButton.getAttribute("aria-expanded") === "true";
+  elements.rulesButton.setAttribute("aria-expanded", String(!expanded));
+  elements.rulesCard.hidden = expanded;
 });
 
 elements.newGameButton.addEventListener("click", () => {
   state = createGameState(highscore);
   beginRound();
 });
-
-beginRound();

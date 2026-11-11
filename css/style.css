@@ -21,9 +21,39 @@ h1 {
   line-height: 1.2;
 }
 
-.plot-intro {
-  margin: 0 0 1rem;
-  color: #425166;
+.start-screen {
+  width: min(100%, 46rem);
+  margin: 2rem auto;
+  padding: 1.25rem;
+  border: 1px solid #d5dde6;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.start-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.rules-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #d5dde6;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.rules-card h2 {
+  margin-top: 0;
+}
+
+.game-screen {
+  display: grid;
+}
+
+.game-hud {
+  min-width: 0;
 }
 
 .game-status {
@@ -54,6 +84,10 @@ h1 {
 .storage-notice,
 .input-error {
   color: #b42318;
+}
+
+.storage-notice:empty {
+  display: none;
 }
 
 .round-prompt {
@@ -88,8 +122,9 @@ input:focus-visible {
 }
 
 .plot-container {
-  width: min(100%, 38rem);
-  margin: 1rem auto 0;
+  width: min(100%, 56dvh, 85dvw);
+  aspect-ratio: 1;
+  margin: 0 auto;
   padding: 0.65rem;
   border: 1px solid #d5dde6;
   border-radius: 0.5rem;
@@ -100,8 +135,7 @@ input:focus-visible {
 .scatterplot {
   display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 1;
+  height: 100%;
 }
 
 .plot-tick-label {
@@ -235,10 +269,11 @@ input:focus-visible {
 @media (max-width: 30rem) {
   .app {
     width: min(100% - 1rem, 46rem);
-    margin: 1rem auto;
+    margin: 0.25rem auto;
   }
 
   .plot-container {
+    width: min(100%, 82dvw, 40dvh);
     padding: 0.25rem;
   }
 
@@ -252,5 +287,121 @@ input:focus-visible {
 
   .game-status {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 56.25rem) and (orientation: landscape) {
+  .app {
+    width: 100%;
+    height: 100dvh;
+    margin: 0;
+  }
+
+  .game-screen {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 0.75rem 1.25rem;
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.72fr);
+    grid-template-rows: auto minmax(2.5rem, auto) minmax(0, 1fr);
+    grid-template-areas:
+      "plot status"
+      "plot prompt"
+      "plot controls";
+    gap: 0.5rem 1.5rem;
+    align-items: center;
+  }
+
+  .game-hud {
+    grid-area: status;
+  }
+
+  .game-status {
+    margin: 0;
+  }
+
+  .storage-notice {
+    margin: 0.2rem 0 0;
+    font-size: 0.8rem;
+  }
+
+  .round-prompt {
+    grid-area: prompt;
+    margin: 0;
+  }
+
+  .plot-container {
+    grid-area: plot;
+    width: min(100%, 78dvh, 48dvw);
+    max-height: 100%;
+    padding: 0.45rem;
+  }
+
+  .guess-form,
+  .resolution {
+    grid-area: controls;
+    width: 100%;
+    max-height: 100%;
+    min-height: 0;
+    margin: 0;
+    overflow-y: auto;
+  }
+
+  .game-over {
+    grid-area: 1 / 1 / -1 / -1;
+    align-self: center;
+    justify-self: center;
+    width: min(100%, 36rem);
+  }
+
+  .game-status div {
+    padding: 0.45rem 0.6rem;
+  }
+
+  .game-status dd {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 56.249rem) {
+  .game-screen {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(2.5rem, auto) auto auto;
+    grid-template-areas:
+      "status"
+      "prompt"
+      "plot"
+      "controls";
+    gap: 0;
+  }
+
+  .game-hud {
+    grid-area: status;
+  }
+
+  .game-status {
+    margin: 0.5rem 0;
+  }
+
+  .round-prompt {
+    grid-area: prompt;
+    margin: 0 0 0.25rem;
+  }
+
+  .plot-container {
+    grid-area: plot;
+    margin: 0 auto;
+  }
+
+  .guess-form,
+  .resolution {
+    grid-area: controls;
+    width: 100%;
+    margin: 0.5rem auto;
+  }
+
+  .game-over {
+    width: 100%;
+    margin: 0.5rem auto;
   }
 }
