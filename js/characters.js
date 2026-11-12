@@ -2,9 +2,9 @@ export const CHARACTER_NAMES = ["pearson", "spearman", "regression"];
 export const CHARACTER_POSES = ["ruhe", "zeigen", "jubel", "enttaeuscht"];
 
 const CHARACTER_LABELS = {
-  pearson: "Pear-son",
-  spearman: "Spear-man",
-  regression: "Regression",
+  pearson: "Pear-Son",
+  spearman: "Spear-Man",
+  regression: "Regressions-Magier",
 };
 
 const characterImages = new Map();
@@ -83,10 +83,13 @@ export function createCharacterSprite(character, { pose = "ruhe", scale = 2, cla
       image.alt = `${CHARACTER_LABELS[character]} – ${nextPose}`;
       setImageSize(image, selectedImage, scale);
 
-      const frameWidth = Math.max(...[...images.values()].map((item) => item.naturalWidth)) * scale;
-      const frameHeight = Math.max(...[...images.values()].map((item) => item.naturalHeight)) * scale;
-      element.style.width = `${frameWidth}px`;
-      element.style.height = `${frameHeight}px`;
+      const restPose = images.get("ruhe");
+      element.style.width = `${restPose.naturalWidth * scale}px`;
+      element.style.height = `${restPose.naturalHeight * scale}px`;
+      element.classList.toggle(
+        "points-right",
+        className === "round-character-sprite" && character === "spearman" && nextPose === "zeigen",
+      );
 
       if (nextPose === "ruhe") {
         element.classList.add("wippen");

@@ -3,13 +3,23 @@
   flex: 0 0 auto;
   align-items: flex-end;
   justify-content: center;
+  position: relative;
   vertical-align: bottom;
 }
 
 .character-image {
   display: block;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
   max-width: none;
   image-rendering: pixelated;
+}
+
+.character-frame.points-right .character-image {
+  left: 0;
+  transform: none;
 }
 
 .character-frame.wippen {

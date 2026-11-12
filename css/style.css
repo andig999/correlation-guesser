@@ -35,8 +35,8 @@ body {
 }
 
 .app {
-  width: min(100% - 2rem, 74rem);
-  margin: 1.25rem auto;
+  width: min(100% - 2rem, 75rem);
+  margin: 0 auto;
 }
 
 .start-screen,
@@ -195,21 +195,92 @@ input:focus-visible {
 }
 
 .game-screen {
+  width: min(100%, 75rem);
+  height: 100dvh;
+  margin: 0 auto;
+  padding: 0.55rem 0;
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.5rem;
 }
 
 .game-hud {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
   min-width: 0;
+  padding: 0.35rem;
+  border: 2px solid #765837;
+  background: #eee0be;
+}
+
+.game-status {
+  margin: 0;
+}
+
+.menu-button {
+  min-height: 2.4rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.82rem;
+}
+
+.storage-notice,
+.menu-confirmation {
+  grid-column: 1 / -1;
+}
+
+.menu-confirmation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  padding: 0.35rem 0.5rem;
+  border: 2px solid #836c49;
+  background: #f3e7cb;
+  font-size: 0.85rem;
+}
+
+.menu-confirmation[hidden] {
+  display: none;
+}
+
+.menu-confirmation span {
+  margin-right: auto;
+  font-weight: 700;
+}
+
+.menu-confirmation button {
+  min-height: 2rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.game-columns {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.game-sidebar {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: auto auto;
+  gap: 0.55rem;
 }
 
 .game-status {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.45rem;
-  margin: 0.5rem 0;
-  padding: 0.45rem;
-  border: 2px solid #765837;
-  background: #eee0be;
+  margin: 0;
+  padding: 0.3rem;
+  border: 0;
+  background: transparent;
 }
 
 .game-status div {
@@ -276,18 +347,20 @@ input:focus-visible {
 .prompt-row {
   display: flex;
   min-width: 0;
+  height: 7rem;
   align-items: flex-end;
   gap: 0.55rem;
-  min-height: 7rem;
-  margin: 0.35rem 0;
+  margin: 0;
 }
 
 .prompt-character {
   display: flex;
   flex: 0 0 auto;
-  height: 6rem;
+  min-height: 7.5rem;
   align-items: flex-end;
   justify-content: center;
+  position: relative;
+  z-index: 2;
 }
 
 .prompt-board {
@@ -323,9 +396,11 @@ input:focus-visible {
 }
 
 .plot-container {
-  width: min(100%, 56dvh, 85dvw);
+  width: min(100%, calc(100dvh - 8.5rem));
   aspect-ratio: 1;
-  margin: 0 auto;
+  align-self: start;
+  justify-self: center;
+  margin: 0;
   padding: 0.45rem;
   border: 2px solid #7e6847;
   background: #fffaf0;
@@ -361,12 +436,16 @@ input:focus-visible {
 .resolution,
 .game-over {
   width: 100%;
-  margin: 0.75rem auto;
+  margin: 0;
 }
 
 .guess-form {
   display: grid;
-  gap: 0.65rem;
+  align-content: start;
+  align-self: start;
+  min-height: 0;
+  gap: 0.45rem;
+  padding: 0.75rem;
 }
 
 .guess-form label {
@@ -398,6 +477,11 @@ input:focus-visible {
   text-align: right;
 }
 
+.submit-guess,
+.resolution > button {
+  justify-self: start;
+}
+
 .guess-controls input[aria-invalid="true"] {
   border-color: #b42318;
 }
@@ -411,6 +495,48 @@ input:focus-visible {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.55rem;
+}
+
+.resolution:not([hidden]) {
+  display: grid;
+  align-content: start;
+  align-self: start;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.2rem;
+  padding: 0.3rem;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
+.resolution .resolution-round,
+.resolution .guess-result,
+.resolution .round-reward,
+.resolution .regression-slope,
+.resolution .scenario-explanation {
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+}
+
+.resolution .group-results {
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+.resolution .group-results p {
+  margin: 0;
+}
+
+.resolution .round-reward {
+  padding: 0.35rem 0.5rem;
+}
+
+.resolution .coefficient {
+  padding: 0.35rem;
+}
+
+.resolution .scenario-explanation {
+  font-size: 0.82rem;
+  line-height: 1.3;
 }
 
 .coefficient {
@@ -449,8 +575,8 @@ input:focus-visible {
   margin: 0;
   color: var(--pearson);
   font-family: "Press Start 2P", system-ui, sans-serif;
-  font-size: clamp(1rem, 3vw, 1.5rem);
-  line-height: 1.8;
+  font-size: clamp(0.9rem, 2vw, 1.3rem);
+  line-height: 1.4;
   text-align: center;
 }
 
@@ -522,6 +648,19 @@ input:focus-visible {
   text-align: center;
 }
 
+.game-over-screen {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 1rem;
+}
+
+.game-over-screen .game-over {
+  width: min(100%, 42rem);
+  margin: 0;
+  padding: clamp(1rem, 4vw, 2rem);
+}
+
 .game-over .title-mark {
   margin-top: 0.4rem;
 }
@@ -540,6 +679,8 @@ input:focus-visible {
   display: flex;
   height: 7rem;
   align-items: flex-end;
+  position: relative;
+  z-index: 1;
 }
 
 .end-message {
@@ -574,15 +715,108 @@ input:focus-visible {
   display: none !important;
 }
 
-@media (max-width: 30rem) {
+@media (max-width: 56.249rem), (orientation: portrait) {
   .app {
-    width: min(100% - 1rem, 46rem);
-    margin: 0.3rem auto;
+    width: min(100% - 1rem, 75rem);
+    margin: 0 auto;
+  }
+
+  .game-screen {
+    width: 100%;
+    height: auto;
+    min-height: 100dvh;
+    padding: 0.25rem 0 0;
+    grid-template-rows: auto auto;
+    gap: 0.35rem;
+  }
+
+  .game-columns {
+    margin-top: 3.3rem;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 0.45rem;
+  }
+
+  .game-sidebar {
+    display: contents;
+  }
+
+  .prompt-row {
+    order: 0;
+    height: 5.75rem;
   }
 
   .plot-container {
-    width: min(100%, 82dvw, 40dvh);
+    width: min(100%, 38dvh, 82dvw);
     padding: 0.25rem;
+    order: 1;
+  }
+
+  .guess-form,
+  .resolution {
+    order: 2;
+  }
+
+  .guess-form {
+    margin: 0.1rem auto 0.35rem;
+    padding: 0.6rem;
+  }
+
+  .resolution:not([hidden]) {
+    margin: 0.1rem auto 0.35rem;
+    padding: 0.6rem;
+    overflow: visible;
+  }
+
+  .game-status {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.25rem;
+    padding: 0.25rem;
+  }
+
+  .game-status div {
+    gap: 0.2rem;
+    padding: 0.2rem;
+  }
+
+  .game-status dt {
+    font-size: 0.72rem;
+  }
+
+  .game-status dd {
+    font-size: 0.95rem;
+  }
+
+  .lives-slots .icon svg,
+  .status-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .input-error:empty {
+    display: none;
+  }
+
+  .game-over-screen {
+    min-height: 100dvh;
+  }
+
+  .game-over {
+    width: 100%;
+  }
+}
+
+@media (max-width: 30rem) {
+  .game-status {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .game-status div {
+    justify-content: flex-start;
+  }
+
+  .plot-container {
+    width: min(100%, 32dvh, 82dvw);
   }
 
   .plot-tick-label {
@@ -593,12 +827,29 @@ input:focus-visible {
     font-size: 26px;
   }
 
-  .game-status {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .prompt-board {
+    padding: 0.45rem 0.3rem;
   }
 
-  .game-status div {
+  .prompt-board span {
+    font-size: 0.92rem;
+  }
+
+  .prompt-board small {
+    font-size: 0.72rem;
+  }
+
+  .guess-controls {
+    grid-template-columns: minmax(0, 1fr) 5rem;
+    gap: 0.4rem;
+  }
+
+  .menu-confirmation {
     justify-content: flex-start;
+  }
+
+  .menu-confirmation span {
+    flex-basis: 100%;
   }
 
   .menu-characters {
@@ -613,151 +864,49 @@ input:focus-visible {
   .menu-character .character-frame {
     height: 6rem;
   }
-
-  .prompt-character {
-    height: 5rem;
-  }
 }
 
 @media (min-width: 56.25rem) and (orientation: landscape) {
-  .app {
-    width: 100%;
-    height: 100dvh;
-    margin: 0;
-  }
-
-  .start-screen {
-    margin-top: 5dvh;
-  }
-
   .game-screen {
-    width: 100%;
+    --game-stage-size: min(calc(100dvh - 7.1rem), calc((min(100vw - 2rem, 75rem) - 1rem) / 2));
+    height: auto;
+    min-height: 100dvh;
+    padding-right: 0;
+    padding-left: 0;
+    grid-template-rows: auto auto;
+    align-content: center;
+  }
+
+  .game-columns {
+    height: var(--game-stage-size);
+  }
+
+  .game-sidebar {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .plot-container {
+    width: min(100%, var(--game-stage-size));
+  }
+
+  .resolution:not([hidden]) {
     height: 100%;
     min-height: 0;
-    padding: 0.65rem 1.25rem;
-    grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.72fr);
-    grid-template-rows: auto minmax(5.5rem, auto) minmax(0, 1fr);
-    grid-template-areas:
-      "plot status"
-      "plot prompt"
-      "plot controls";
-    gap: 0.35rem 1.25rem;
-    align-items: center;
+    align-self: stretch;
   }
 
   .game-hud {
-    grid-area: status;
+    min-height: 5.5rem;
+    align-items: center;
+    padding: 0.3rem 0.4rem;
   }
 
-  .game-status {
+  .game-hud .game-status {
     margin: 0;
   }
 
   .storage-notice {
-    margin: 0.15rem 0 0;
-  }
-
-  .prompt-row {
-    grid-area: prompt;
-    margin: 0;
-  }
-
-  .plot-container {
-    grid-area: plot;
-    width: min(100%, 78dvh, 48dvw);
-    max-height: 100%;
-    padding: 0.35rem;
-  }
-
-  .guess-form,
-  .resolution {
-    grid-area: controls;
-    max-height: 100%;
-    min-height: 0;
-    margin: 0;
-    overflow-y: auto;
-  }
-
-  .game-over {
-    grid-area: 1 / 1 / -1 / -1;
-    align-self: center;
-    justify-self: center;
-    width: min(100%, 36rem);
-    max-height: 96%;
-    overflow-y: auto;
-  }
-
-  .game-status div {
-    padding: 0.25rem;
-  }
-
-  .game-status dt {
-    font-size: 0.72rem;
-  }
-
-  .game-status dd {
-    font-size: 1rem;
-  }
-}
-
-@media (max-width: 56.249rem) {
-  .game-screen {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto auto auto;
-    grid-template-areas:
-      "status"
-      "prompt"
-      "plot"
-      "controls";
-    gap: 0;
-  }
-
-  .game-hud {
-    grid-area: status;
-  }
-
-  .prompt-row {
-    grid-area: prompt;
-  }
-
-  .plot-container {
-    grid-area: plot;
-  }
-
-  .guess-form,
-  .resolution {
-    grid-area: controls;
-  }
-
-  .guess-form {
-    gap: 0.45rem;
-    margin: 0.5rem auto;
-    padding: 0.75rem;
-  }
-
-  .input-error:empty {
-    display: none;
-  }
-
-  .game-status {
-    gap: 0.25rem;
-    padding: 0.25rem;
-  }
-
-  .game-status div {
-    gap: 0.2rem;
-    padding: 0.2rem;
-  }
-
-  .lives-slots .icon svg,
-  .status-icon svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .game-over {
-    width: 100%;
-    margin: 0.5rem auto;
+    margin: 0.1rem 0;
   }
 }
 

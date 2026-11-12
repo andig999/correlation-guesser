@@ -42,17 +42,23 @@ document.querySelector("#average-error-value").setAttribute("aria-label", TEXTS.
 document.querySelector("#guess-label").textContent = TEXTS.guessLabel;
 document.querySelector("#guess-input").setAttribute("aria-label", TEXTS.numberInputLabel);
 document.querySelector("#submit-guess").textContent = TEXTS.submitGuess;
+document.querySelector("#menu-button").textContent = TEXTS.menu;
+document.querySelector("#menu-confirmation-text").textContent = TEXTS.abandonPrompt;
+document.querySelector("#menu-confirm-yes").textContent = TEXTS.yes;
+document.querySelector("#menu-confirm-no").textContent = TEXTS.no;
 document.querySelector("#resolution-title").textContent = TEXTS.resolutionTitle;
 document.querySelector("#game-over-title").textContent = TEXTS.gameOverTitle;
 document.querySelector("#game-over-message").textContent = TEXTS.gameOverMessage;
 document.querySelector("#game-over-coins-label").textContent = TEXTS.gameOverCoins;
 document.querySelector("#highscore-label").textContent = TEXTS.highscore;
 document.querySelector("#new-game-button").textContent = TEXTS.newGame;
+document.querySelector("#main-menu-button").textContent = TEXTS.mainMenu;
 document.querySelector("#continue-button").textContent = TEXTS.continue;
 
 const elements = {
   startScreen: document.querySelector("#start-screen"),
   gameScreen: document.querySelector("#game-screen"),
+  gameOverScreen: document.querySelector("#game-over"),
   menuCharacters: document.querySelector("#menu-characters"),
   menuStatus: document.querySelector("#menu-status"),
   endCharacters: document.querySelector("#end-characters"),
@@ -60,6 +66,10 @@ const elements = {
   startStorageNotice: document.querySelector("#start-storage-notice"),
   startButton: document.querySelector("#start-button"),
   rulesButton: document.querySelector("#rules-button"),
+  menuButton: document.querySelector("#menu-button"),
+  menuConfirmation: document.querySelector("#menu-confirmation"),
+  menuConfirmYes: document.querySelector("#menu-confirm-yes"),
+  menuConfirmNo: document.querySelector("#menu-confirm-no"),
   rulesCard: document.querySelector("#rules-card"),
   prompt: document.querySelector("#round-prompt"),
   promptBoard: document.querySelector("#prompt-board"),
@@ -86,11 +96,11 @@ const elements = {
   regression: document.querySelector("#regression-slope"),
   groupResults: document.querySelector("#group-results"),
   continueButton: document.querySelector("#continue-button"),
-  gameOver: document.querySelector("#game-over"),
   gameOverCoins: document.querySelector("#game-over-coins"),
   gameOverMessage: document.querySelector("#game-over-message"),
   highscore: document.querySelector("#highscore-value"),
   newGameButton: document.querySelector("#new-game-button"),
+  mainMenuButton: document.querySelector("#main-menu-button"),
 };
 
 document.querySelectorAll("[data-icon]").forEach((element) => {
@@ -98,7 +108,8 @@ document.querySelectorAll("[data-icon]").forEach((element) => {
 });
 
 const menuCharacters = new Map();
-for (const character of CHARACTER_NAMES) {
+const MENU_CHARACTER_ORDER = ["pearson", "regression", "spearman"];
+for (const character of MENU_CHARACTER_ORDER) {
   const item = document.createElement("div");
   item.className = "menu-character";
   item.setAttribute("aria-label", TEXTS.characterNames[character]);
@@ -295,7 +306,9 @@ function beginRound() {
   const seed = Math.floor(Math.random() * 4294967296);
   const scenario = createScenario(seed, state.round + 1);
   elements.startScreen.hidden = true;
+  elements.gameOverScreen.hidden = true;
   elements.gameScreen.hidden = false;
+  elements.menuConfirmation.hidden = true;
   state = startRound(state, scenario);
   updateStatus();
   elements.promptTitle.textContent = scenario.coefficient === "pearson"
@@ -304,16 +317,20 @@ function beginRound() {
   elements.promptCaption.textContent = TEXTS.promptCaption;
   elements.promptBoard.classList.toggle("coefficient-pearson", scenario.coefficient === "pearson");
   elements.promptBoard.classList.toggle("coefficient-spearman", scenario.coefficient === "spearman");
+  elements.promptBoard.style.removeProperty("padding-left");
   elements.slider.style.setProperty(
     "--coefficient-color",
     scenario.coefficient === "pearson" ? "var(--pearson)" : "var(--spearman)",
   );
-  roundCharacter = createCharacterSprite(scenario.coefficient, { pose: "ruhe", scale: 2 });
+  roundCharacter = createCharacterSprite(scenario.coefficient, {
+    pose: "ruhe",
+    scale: 2,
+    className: "round-character-sprite",
+  });
   elements.roundCharacter.replaceChildren(roundCharacter.element);
   elements.prompt.hidden = false;
   elements.form.hidden = false;
   elements.resolution.hidden = true;
-  elements.gameOver.hidden = true;
   elements.inputError.textContent = "";
   elements.input.value = "0.00";
   elements.slider.value = "0";
@@ -412,9 +429,16 @@ function renderResolution(estimate, previousLives, previousCoins) {
   elements.form.hidden = true;
   elements.resolution.hidden = false;
   const reactingCharacter = roundCharacter;
+  const spearmanPointing = result.coefficient === "spearman";
+  if (spearmanPointing) {
+    elements.promptBoard.style.paddingLeft = "5rem";
+  }
   reactingCharacter.setPose("zeigen").then(() => {
     window.setTimeout(() => {
-      reactingCharacter.setPose(result.error <= 0.10 ? "jubel" : "enttaeuscht");
+      reactingCharacter.setPose(result.error <= 0.10 ? "jubel" : "enttaeuscht")
+        .then(() => {
+          elements.promptBoard.style.removeProperty("padding-left");
+        });
     }, 500);
   });
   elements.continueButton.textContent = state.lives === 0 ? TEXTS.finish : TEXTS.continue;
@@ -498,9 +522,6 @@ elements.form.addEventListener("submit", (event) => {
 elements.continueButton.addEventListener("click", () => {
   state = advanceRound(state);
   if (state.phase === "gameover") {
-    elements.prompt.hidden = true;
-    elements.plot.replaceChildren();
-    elements.resolution.hidden = true;
     elements.gameOverCoins.textContent = String(state.coins);
     elements.highscore.textContent = String(highscore);
     elements.gameOverMessage.textContent = highscoreBeatenThisGame
@@ -511,14 +532,14 @@ elements.continueButton.addEventListener("click", () => {
       const item = document.createElement("span");
       item.className = "end-character";
       const sprite = createCharacterSprite(character, {
-        pose: character === "regression" && highscoreBeatenThisGame ? "jubel" : "ruhe",
+        pose: highscoreBeatenThisGame ? "jubel" : "enttaeuscht",
         scale: 2,
       });
       item.append(sprite.element);
       elements.endCharacters.append(item);
     }
-    elements.gameOver.hidden = false;
-    updateStatus();
+    elements.gameScreen.hidden = true;
+    elements.gameOverScreen.hidden = false;
     elements.newGameButton.focus();
     return;
   }
@@ -551,4 +572,37 @@ elements.newGameButton.addEventListener("click", () => {
   state = createGameState(highscore);
   highscoreBeatenThisGame = false;
   beginRound();
+});
+
+elements.menuButton.addEventListener("click", () => {
+  elements.menuConfirmation.hidden = false;
+  elements.menuButton.setAttribute("aria-expanded", "true");
+  elements.menuConfirmNo.focus();
+});
+
+elements.menuConfirmNo.addEventListener("click", () => {
+  elements.menuConfirmation.hidden = true;
+  elements.menuButton.setAttribute("aria-expanded", "false");
+  elements.menuButton.focus();
+});
+
+elements.menuConfirmYes.addEventListener("click", () => {
+  state = createGameState(highscore);
+  highscoreBeatenThisGame = false;
+  elements.menuConfirmation.hidden = true;
+  elements.menuButton.setAttribute("aria-expanded", "false");
+  elements.gameScreen.hidden = true;
+  elements.gameOverScreen.hidden = true;
+  elements.startScreen.hidden = false;
+  elements.startHighscore.textContent = String(highscore);
+  elements.startButton.focus();
+});
+
+elements.mainMenuButton.addEventListener("click", () => {
+  state = createGameState(highscore);
+  highscoreBeatenThisGame = false;
+  elements.gameOverScreen.hidden = true;
+  elements.startScreen.hidden = false;
+  elements.startHighscore.textContent = String(highscore);
+  elements.startButton.focus();
 });

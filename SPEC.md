@@ -161,9 +161,25 @@ Während des Schätzens müssen Statusleiste, Aufgabe, Plot und Eingabe ohne Scr
 - Pfeiltasten ändern die Schätzung um 0,01, mit Umschalttaste um 0,10, auch wenn das Zahlenfeld fokussiert ist.
 - Nach dem Bestätigen liegt der Fokus auf „Weiter“, Enter und Leertaste starten die nächste Runde.
 
-### Start
+### Layout im Detail
+
+- Der gesamte Spielbereich ist ein zentrierter Block mit fester Maximalbreite (z. B. 1200 px). Kein Element klebt am rechten oder linken Fensterrand.
+- Im Querformat: Statusleiste über die volle Breite dieses Blocks, darunter zwei Spalten. Linke Spalte Plot, rechte Spalte Figur mit Aufgabenschild, darunter Eingabe bzw. Auflösung. Beide Spalten beginnen oben auf gleicher Höhe und sind gleich hoch. Die rechte Spalte verteilt ihren Inhalt über diese Höhe, ohne große Leerräume.
+- Die Figur hat einen eigenen, festen Bereich, dessen Höhe sich aus der Ruhe-Pose der Figur und dem Skalierungsfaktor ergibt. Gewollter Effekt: Höhere oder breitere Posen (Speerspitze, erhobene Birne, Funken) dürfen etwas aus diesem Bereich herausragen und dabei Rahmen oder Hintergrund benachbarter Elemente überlappen, auch die Statusleiste. Grenzen dafür:
+  - höchstens etwa ein Viertel der Figurenhöhe über den eigenen Bereich hinaus,
+  - nie über Text, Zahlen, Icons, Eingabefeldern oder Buttons,
+  - die Figur liegt dabei immer sichtbar vorne (z-index), damit es gewollt aussieht und nicht wie ein Darstellungsfehler,
+  - kein Abschneiden der Figur am Rand des Fensters oder eines Containers (kein overflow: hidden um die Figur).
+  Muss bei allen Prüfgrößen eingehalten werden.
+- Prüfgrößen zusätzlich: 1280 × 720, 1536 × 730, 1024 × 768.
+
+### Start und Navigation
 
 Beim Laden erscheint ein Startbildschirm mit Titel, Highscore, „Spiel starten“ und „Spielregeln“. „Spielregeln“ zeigt eine Karte mit Leben und Münzen. Das Spiel startet nicht automatisch.
+
+- In der Statusleiste ein kleiner Button „Menü“. Ein Klick fragt in der Oberfläche nach („Spiel abbrechen? Ja / Nein“, kein Browser-Dialog). Bei „Ja“ zurück zum Hauptmenü, der Spielstand verfällt.
+- Der Endbildschirm hat die Buttons „Neues Spiel“ und „Hauptmenü“.
+- Auf dem Endbildschirm sind Statusleiste und Plot ausgeblendet. Der Endbildschirm ist eine eigene Ansicht wie das Hauptmenü, keine Überlagerung.
 
 ## 10. Design
 
@@ -193,6 +209,15 @@ Dateinamen: `<figur>-<pose>.png` mit Figur `pearson`, `spearman`, `regression` u
 - Beim Bestätigen der Schätzung: kurz (ca. 0,5 s) „zeigen“.
 - In der Auflösung: Fehler ≤ 0,10 „jubel“, Fehler > 0,10 „enttaeuscht“.
 - Auf schmalen Bildschirmen kleinerer Faktor (2×). Die Figur darf den Plot nicht verdrängen.
+
+### Regression (Zauberer)
+
+Der Zauberer erscheint in Version 1.1 nur im Hauptmenü und auf dem Endbildschirm. Eine eigene Aufgabe im Spiel bekommt er erst, wenn die Steigung eingeführt wird (siehe Abschnitt 12, „Offen“). Erklärtexte stehen weiterhin ohne Figur in der Auflösung.
+
+### Endbildschirm
+
+- Alle drei Figuren. Neuer Highscore: alle „jubel“. Sonst: alle „enttaeuscht“.
+- Überschrift „Spiel beendet“, darunter je nach Ergebnis „Neuer Rekord!“ oder „Kein neuer Rekord – versuch es gleich noch einmal.“ Kein Text, der Erfolg behauptet, wenn es keinen gab.
 
 ### Hauptmenü
 

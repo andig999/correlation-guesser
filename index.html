@@ -38,38 +38,51 @@
             <div><dt id="round-label"></dt><dd id="round-value"><span class="icon status-icon" data-icon="fahne"></span><span id="round-count"></span></dd></div>
             <div><dt id="average-error-label"></dt><dd id="average-error-value"><span class="icon status-icon" data-icon="zielscheibe"></span><span id="average-error-display"></span></dd></div>
           </dl>
+          <button id="menu-button" class="menu-button" type="button"
+            aria-controls="menu-confirmation" aria-expanded="false"></button>
           <p id="storage-notice" class="storage-notice" role="status"></p>
-        </div>
-        <div id="round-prompt" class="prompt-row">
-          <div id="round-character" class="prompt-character"></div>
-          <h2 id="prompt-board" class="prompt-board">
-            <span id="round-prompt-title"></span>
-            <small id="round-prompt-caption"></small>
-          </h2>
-        </div>
-        <div id="plot" class="plot-container"></div>
-        <form id="guess-form" class="guess-form">
-          <label id="guess-label" for="guess-slider"></label>
-          <div class="guess-controls">
-            <input id="guess-slider" type="range" min="-1" max="1" step="0.01" value="0">
-            <input id="guess-input" type="text" inputmode="decimal" autocomplete="off" value="0.00"
-              aria-describedby="input-error">
+          <div id="menu-confirmation" class="menu-confirmation" role="group" aria-labelledby="menu-confirmation-text" hidden>
+            <span id="menu-confirmation-text"></span>
+            <button id="menu-confirm-yes" type="button"></button>
+            <button id="menu-confirm-no" type="button"></button>
           </div>
-          <p id="input-error" class="input-error" aria-live="polite"></p>
-          <button id="submit-guess" type="submit"></button>
-        </form>
-        <section id="resolution" class="resolution" aria-live="polite" hidden>
-          <h2 id="resolution-title"></h2>
-          <p id="resolution-round" class="resolution-round"></p>
-          <div id="coefficients" class="coefficients"></div>
-          <p id="guess-result" class="guess-result"></p>
-          <div id="round-reward" class="round-reward"></div>
-          <p id="regression-slope" class="regression-slope"></p>
-          <div id="group-results" class="group-results"></div>
-          <p id="scenario-explanation" class="scenario-explanation"></p>
-          <button id="continue-button" type="button"></button>
-        </section>
-        <section id="game-over" class="game-over" aria-live="polite" hidden>
+        </div>
+        <div class="game-columns">
+          <div id="plot" class="plot-container"></div>
+          <div class="game-sidebar">
+            <div id="round-prompt" class="prompt-row">
+              <div id="round-character" class="prompt-character"></div>
+              <h2 id="prompt-board" class="prompt-board">
+                <span id="round-prompt-title"></span>
+                <small id="round-prompt-caption"></small>
+              </h2>
+            </div>
+            <form id="guess-form" class="guess-form">
+              <label id="guess-label" for="guess-slider"></label>
+              <div class="guess-controls">
+                <input id="guess-slider" type="range" min="-1" max="1" step="0.01" value="0">
+                <input id="guess-input" type="text" inputmode="decimal" autocomplete="off" value="0.00"
+                  aria-describedby="input-error">
+              </div>
+              <p id="input-error" class="input-error" aria-live="polite"></p>
+              <button id="submit-guess" class="submit-guess" type="submit"></button>
+            </form>
+            <section id="resolution" class="resolution" aria-live="polite" hidden>
+              <h2 id="resolution-title"></h2>
+              <p id="resolution-round" class="resolution-round"></p>
+              <div id="coefficients" class="coefficients"></div>
+              <p id="guess-result" class="guess-result"></p>
+              <div id="round-reward" class="round-reward"></div>
+              <p id="regression-slope" class="regression-slope"></p>
+              <div id="group-results" class="group-results"></div>
+              <p id="scenario-explanation" class="scenario-explanation"></p>
+              <button id="continue-button" type="button"></button>
+            </section>
+          </div>
+        </div>
+      </section>
+      <section id="game-over" class="game-over-screen" aria-live="polite" hidden>
+        <div class="game-over">
           <p class="title-mark">Das Abenteuer ist geschafft</p>
           <h2 id="game-over-title"></h2>
           <div id="end-characters" class="end-characters" aria-label="Die drei Figuren"></div>
@@ -77,7 +90,8 @@
           <p class="end-score"><span id="game-over-coins-label"></span><span class="icon" data-icon="muenze"></span> <strong id="game-over-coins"></strong></p>
           <p class="end-highscore"><span id="highscore-label"></span>: <strong id="highscore-value"></strong></p>
           <button id="new-game-button" type="button"></button>
-        </section>
+          <button id="main-menu-button" type="button"></button>
+        </div>
       </section>
     </main>
     <script type="module" src="./js/main.js"></script>
