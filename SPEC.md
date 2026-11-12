@@ -30,10 +30,10 @@ Ein einziger Modus. Jede Runde:
 
 - Start mit 3 Leben und 0 Münzen.
 - Fehler = |Schätzung − wahrer Wert des gefragten Koeffizienten|, gerundet auf 2 Nachkommastellen.
-- Fehler ≤ 0,05: +1 Leben und +5 Münzen.
+- Fehler ≤ 0,05: +1 Leben (höchstens 3, siehe unten) und +5 Münzen.
 - 0,05 < Fehler ≤ 0,10: +1 Münze.
 - Fehler > 0,10: −1 Leben.
-- Kein Streak-Bonus, keine Obergrenze für Leben.
+- Kein Streak-Bonus. Höchstens 3 Leben (seit Version 1.1). Wer bei 3 Leben ≤ 0,05 trifft, bekommt nur die 5 Münzen.
 - Bei 0 Leben: Endbildschirm mit Münzen dieser Runde, Highscore und Button „Neues Spiel“.
 - Highscore = höchste Münzsumme, gespeichert in `localStorage` pro Gerät. Kein Name, kein Server.
 - Anzeige während des Spiels: Leben, Münzen, Rundennummer, laufender durchschnittlicher Fehler.
@@ -167,22 +167,58 @@ Beim Laden erscheint ein Startbildschirm mit Titel, Highscore, „Spiel starten�
 
 ## 10. Design
 
-Das Tool soll wie ein Spiel aussehen, bleibt aber auf Beamer und in Videoaufzeichnungen gut lesbar.
+Pixel-Art-Rollenspiel-Stil. Das Tool soll wie ein kleines Spiel wirken und nicht wie ein Dashboard, bleibt aber auf Beamer und in Videoaufzeichnungen gut lesbar.
 
-- Statusleiste als Spiel-HUD: Herzen für Leben (bei mehr als 5 Leben „♥ × n“-Darstellung), Münz-Icon mit Zahl, Runde, Ø-Fehler.
-- Icons als eigene Inline-SVGs in `js/icons.js`. Keine Emojis (sehen je nach Gerät verschieden aus), keine externen Icon-Fonts oder CDNs.
-- Kräftigere Farben, abgerundete Karten, klare Hierarchie. Fließtext in Systemschrift, keine Pixelschrift für Text.
-- Feste Farbe und festes Symbol für jeden Koeffizienten, überall gleich (Aufgabentext, Slider, Werte in der Auflösung, Regressionslinie): Pearson eine gerade Linie, Spearman eine Treppe. Die Farben dürfen nicht mit den Farben der Punktwolke verwechselbar sein. Version 1.2 baut darauf auf.
-- Rückmeldung je Runde: Stufe als große Überschrift („Volltreffer!“ bei ≤ 0,05, „Gut!“ bei ≤ 0,10, „Daneben“ bei > 0,10), Münzen zählen sichtbar hoch, Herz kommt animiert dazu oder zerbricht. Bei `prefers-reduced-motion` ohne Animation.
+### Figuren
+
+Drei Figuren im Pixel-Art-Stil mit je vier Posen, als fertige PNG-Dateien mit transparentem Hintergrund in `assets/sprites/`. Copilot erzeugt oder verändert diese Bilder nicht, sondern bindet sie nur ein.
+
+Dateinamen: `<figur>-<pose>.png` mit Figur `pearson`, `spearman`, `regression` und Pose `ruhe`, `zeigen`, `jubel`, `enttaeuscht`.
+
+| Figur | ruhe | zeigen | jubel | enttaeuscht |
+|---|---|---|---|---|
+| Pear-son (Bauer mit Birne) | steht, hält Birne | Hand nach rechts ausgestreckt | Birne hochgehalten | Platzhalter |
+| Spear-man (Speerträger) | Speer aufrecht | Speer waagrecht nach rechts | Platzhalter | Platzhalter |
+| Regression (Zauberer) | steht mit Stab | Hand nach rechts ausgestreckt | Faust und Stab erhoben | Platzhalter |
+
+- Platzhalter sind graue Silhouetten der Ruhe-Pose mit Fragezeichen. Sie werden später durch echte Bilder mit gleichem Dateinamen ersetzt. Der Code darf deshalb keine Annahmen über die Bildgröße fest einbauen.
+- Die Bilder sind echte Pixel-Art in Originalgröße (ca. 33–80 × 56–82 px, alle im selben Maßstab). Darstellung immer mit ganzzahligem Faktor (z. B. 2×, 3× oder 4× je nach Bildschirm) und `image-rendering: pixelated`. Breite und Höhe zur Laufzeit aus `naturalWidth`/`naturalHeight` berechnen.
+- Ausrichtung: unten bündig, damit beim Wechsel der Pose nichts springt. Manche Posen sind breiter oder höher als die Ruhe-Pose.
+- Zusätzliche Bewegung nur über CSS: leichtes Wippen bei „ruhe“, kurzes Hüpfen beim Wechsel auf „jubel“. Bei `prefers-reduced-motion` ohne Bewegung.
+
+### Figuren im Spiel
+
+- In jeder Runde steht nur die Figur des gefragten Koeffizienten neben dem Aufgabenschild („Schätze Pearson r“ bzw. „Schätze Spearman ρ“): Pear-son bei Pearson, Spear-man bei Spearman. Die Figur steht links vom Schild, damit „zeigen“ auf das Schild zeigt.
+- Während des Schätzens: „ruhe“.
+- Beim Bestätigen der Schätzung: kurz (ca. 0,5 s) „zeigen“.
+- In der Auflösung: Fehler ≤ 0,10 „jubel“, Fehler > 0,10 „enttaeuscht“.
+- Auf schmalen Bildschirmen kleinerer Faktor (2×). Die Figur darf den Plot nicht verdrängen.
+
+### Hauptmenü
+
+- Alle drei Figuren stehen nebeneinander in „ruhe“, darüber der Titel, darunter die Buttons.
+- Liegt der Mauszeiger oder der Tastaturfokus auf einem Button, wechseln die Figuren auf „zeigen“.
+- Bei Klick auf einen Button wechseln sie ca. 0,6 s auf „jubel“, dann folgt die Aktion des Buttons. „Spiel starten“: alle drei. „Spielregeln“: nur Regression.
+
+### Buttons und Oberfläche
+
+- Buttons nur so breit wie ihr Inhalt, nie über die ganze Breite. Kompakt, mit dickem dunklem Pixelrahmen und Pixelschatten nach unten. Beim Drücken sinkt der Button sichtbar ein.
+- Farben aus der RPG-Welt: Pergament als helle Grundfläche, Braun und gedecktes Blau als Rahmen und Akzente. Heller Grund, weil dunkle Flächen auf Hörsaal-Beamern oft blass wirken.
+- Statusleiste als Spiel-HUD: Leben als drei feste Herz-Slots, volle Herzen für vorhandene Leben, leere Slots für verlorene (z. B. 1 Leben: ein volles, zwei leere Herzen). Beim Verlust zerbricht das Herz kurz und wird dann zum leeren Slot, beim Gewinn füllt sich ein leerer Slot. Dazu Pixel-Münze mit Zahl, Runde, Ø-Fehler.
+- HUD-Icons als kleine Pixel-Raster (16 × 16) in `js/sprites.js`. Keine Emojis, keine externen Icon-Fonts oder CDNs.
+- Fließtext in Systemschrift, keine Pixelschrift für Text.
+- Feste Farbe für jeden Koeffizienten, überall gleich (Aufgabenschild, Slider, Werte in der Auflösung, Regressionslinie): Pearson in Birnengrün, Spearman in Waffenrock-Rot, jeweils so abgedunkelt, dass Text darauf gut lesbar ist. Die Punktwolke darf diese Farben nicht verwenden.
+- Rückmeldung je Runde: Stufe als große Überschrift („Volltreffer!“ bei ≤ 0,05, „Gut!“ bei ≤ 0,10, „Daneben“ bei > 0,10), Münzen zählen sichtbar hoch, Herz kommt animiert dazu oder zerbricht.
 - Endbildschirm: neuer Highscore wird sichtbar gefeiert.
 - Kein Ton.
-- Das konkrete Design wird als Entwurf (`design-preview.html`) mit 2–3 Varianten vorgelegt und dann ausgewählt. Aktuell ist Entwurf 1 „Datenlabor“ vorläufig ausgewählt; ein späterer Wechsel bleibt möglich.
 
 ## 11. Dateistruktur (Ergänzung 1.1)
 
 ```
-js/icons.js          Inline-SVG-Icons
-design-preview.html  Designentwürfe, bleibt für einen möglichen späteren Wechsel erhalten
+assets/sprites/*.png  Figuren (siehe Abschnitt 10), nicht verändern
+js/sprites.js         Pixel-Raster für HUD-Icons, Render-Funktion
+sprites-preview.html  Vorschau aller Figuren und Icons
+design-preview.html   Designentwürfe, wird nach der Auswahl gelöscht
 ```
 
 ---

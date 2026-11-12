@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sprite-Vorschau – Correlation Guesser</title>
+    <link rel="stylesheet" href="./css/characters.css">
+    <style>
+      :root {
+        color-scheme: light;
+        font: 16px/1.5 system-ui, sans-serif;
+        color: #38291d;
+        background: #d7c29b;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        padding: 1.5rem;
+        background:
+          radial-gradient(ellipse at 18% 21%, rgb(255 255 255 / 20%) 0 1px, transparent 2px),
+          radial-gradient(ellipse at 76% 63%, rgb(91 57 39 / 7%) 0 1px, transparent 2px),
+          #e8d8b8;
+        background-size: 13px 15px, 19px 17px, auto;
+      }
+
+      main { width: min(100%, 76rem); margin: 0 auto; }
+      h1 { margin: 0 0 0.35rem; font-size: clamp(1.7rem, 4vw, 2.5rem); }
+      h2 { margin: 0 0 0.75rem; }
+      h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+      p { margin: 0.25rem 0 1rem; }
+
+      .character-card,
+      .icon-card {
+        margin: 1.25rem 0;
+        padding: 1rem;
+        border: 2px solid #67482d;
+        background: rgb(255 246 224 / 72%);
+        box-shadow: 4px 4px 0 #876943;
+      }
+
+      .pose-scale { margin-top: 1rem; }
+      .pose-row {
+        display: grid;
+        grid-template-columns: repeat(4, max-content);
+        align-items: end;
+        gap: 1rem;
+        overflow-x: auto;
+        padding: 0.75rem 0.25rem 0.5rem;
+      }
+
+      .pose-sample {
+        display: flex;
+        min-width: 5rem;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        text-align: center;
+      }
+
+      .sample-stage {
+        display: flex;
+        min-height: 7rem;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0.25rem;
+      }
+
+      .scale-4 .sample-stage { min-height: 16rem; }
+      .live-stage {
+        display: flex;
+        min-height: 10rem;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0.75rem;
+        border: 1px dashed #9a8058;
+        background: rgb(255 255 255 / 30%);
+      }
+
+      .pose-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+      }
+
+      button {
+        padding: 0.4rem 0.75rem;
+        border: 2px solid #513923;
+        background: #f3e5c7;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        box-shadow: 2px 2px 0 #755735;
+      }
+
+      button:hover,
+      button[aria-pressed="true"] { background: #d7e2bb; }
+      button:active { transform: translate(2px, 2px); box-shadow: none; }
+      button:focus-visible { outline: 3px solid #174f78; outline-offset: 3px; }
+
+      .icon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: 0.75rem;
+      }
+
+      .icon-sample {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.65rem;
+        border: 1px solid #ad9368;
+        background: rgb(255 255 255 / 30%);
+      }
+
+      .icon-sample svg { display: block; image-rendering: pixelated; }
+      .icon-size { display: flex; align-items: flex-end; gap: 0.65rem; }
+      .icon-size span { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; }
+      .scale-label { color: #68523a; font-size: 0.85rem; }
+
+      @media (max-width: 34rem) {
+        body { padding: 0.75rem; }
+        .character-card, .icon-card { padding: 0.75rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Sprite-Vorschau</h1>
+      <p>Figurenposen, Live-Umschaltung und HUD-Pixelraster. Die PNG-Sprites bleiben unverändert.</p>
+      <div id="characters"></div>
+      <section class="icon-card" aria-labelledby="icons-title">
+        <h2 id="icons-title">HUD-Icons</h2>
+        <div id="icons" class="icon-grid"></div>
+      </section>
+    </main>
+    <script type="module">
+      import { CHARACTER_NAMES, CHARACTER_POSES, createCharacterSprite } from "./js/characters.js";
+      import { HUD_SPRITES, renderHudIcon } from "./js/sprites.js";
+
+      const characterNames = {
+        pearson: "Pear-son",
+        spearman: "Spear-man",
+        regression: "Regression",
+      };
+      const poseNames = {
+        ruhe: "Ruhe",
+        zeigen: "Zeigen",
+        jubel: "Jubel",
+        enttaeuscht: "Enttäuscht",
+      };
+      const iconNames = {
+        vollesHerz: "Volles Herz",
+        leererHerzSlot: "Leerer Herz-Slot",
+        zerbrochenesHerz: "Zerbrochenes Herz",
+        muenze: "Münze",
+        fahne: "Fahne (Runde)",
+        zielscheibe: "Zielscheibe (Ø-Fehler)",
+      };
+
+      function makeElement(tag, className, text) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text) element.textContent = text;
+        return element;
+      }
+
+      async function renderCharacter(character) {
+        const section = makeElement("section", "character-card");
+        section.append(makeElement("h2", "", characterNames[character]));
+
+        for (const scale of [2, 4]) {
+          const scaleSection = makeElement("section", `pose-scale scale-${scale}`);
+          scaleSection.append(makeElement("h3", "", `Alle Posen – ${scale}×`));
+          const row = makeElement("div", "pose-row");
+          const samples = CHARACTER_POSES.map((pose) => {
+            const sample = makeElement("div", "pose-sample");
+            const stage = makeElement("div", "sample-stage");
+            const sprite = createCharacterSprite(character, { pose, scale });
+            stage.append(sprite.element);
+            sample.append(stage, makeElement("span", "", poseNames[pose]));
+            row.append(sample);
+            return sprite.ready;
+          });
+          scaleSection.append(row);
+          section.append(scaleSection);
+          await Promise.all(samples);
+        }
+
+        const live = makeElement("div", "live-preview");
+        live.append(makeElement("h3", "", "Live-Ansicht"));
+        const stage = makeElement("div", "live-stage");
+        const liveSprite = createCharacterSprite(character, { scale: 3 });
+        stage.append(liveSprite.element);
+        const buttons = makeElement("div", "pose-buttons");
+        const poseButtons = [];
+        for (const pose of CHARACTER_POSES) {
+          const button = makeElement("button", "", poseNames[pose]);
+          button.type = "button";
+          button.setAttribute("aria-pressed", String(pose === "ruhe"));
+          button.addEventListener("click", async () => {
+            await liveSprite.setPose(pose);
+            poseButtons.forEach(([otherPose, otherButton]) => {
+              otherButton.setAttribute("aria-pressed", String(otherPose === pose));
+            });
+          });
+          poseButtons.push([pose, button]);
+          buttons.append(button);
+        }
+        live.append(stage, buttons);
+        section.append(live);
+        await liveSprite.ready;
+        document.querySelector("#characters").append(section);
+      }
+
+      function renderIcons() {
+        const grid = document.querySelector("#icons");
+        for (const name of Object.keys(HUD_SPRITES)) {
+          const card = makeElement("div", "icon-sample");
+          const samples = makeElement("div", "icon-size");
+          for (const scale of [1, 2, 4]) {
+            const sample = makeElement("span");
+            sample.innerHTML = renderHudIcon(name, scale);
+            sample.append(makeElement("small", "scale-label", `${scale}×`));
+            samples.append(sample);
+          }
+          card.append(samples, makeElement("span", "", iconNames[name]));
+          grid.append(card);
+        }
+      }
+
+      renderIcons();
+      await Promise.all(CHARACTER_NAMES.map(renderCharacter));
+    </script>
+  </body>
+</html>

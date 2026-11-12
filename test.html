@@ -226,9 +226,14 @@
         points: [{ x: 5, y: 5 }, { x: 50, y: 50 }, { x: 95, y: 95 }],
       };
       const preciseRound = resolveRound(startRound(createGameState(), exactScenario), 0.95);
-      check("Spielregel: Fehler 0,05 bringt 5 Münzen und ein Leben",
+      check("Spielregel: Treffer bei 3 Leben belässt Leben bei 3 und bringt 5 Münzen",
         preciseRound.result.error === 0.05
-          && preciseRound.coins === 5 && preciseRound.lives === 4);
+          && preciseRound.coins === 5 && preciseRound.lives === 3);
+      const twoLivesState = { ...createGameState(), lives: 2 };
+      const recoveredRound = resolveRound(startRound(twoLivesState, exactScenario), 0.95);
+      check("Spielregel: Treffer bei 2 Leben erhöht Leben auf 3",
+        recoveredRound.result.error === 0.05
+          && recoveredRound.coins === 5 && recoveredRound.lives === 3);
       const closeRound = resolveRound(startRound(createGameState(), exactScenario), 0.9);
       check("Spielregel: Fehler 0,10 bringt eine Münze, aber kein Leben",
         closeRound.result.error === 0.1

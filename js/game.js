@@ -55,7 +55,7 @@ export function resolveRound(state, estimate) {
   let livesChange = 0;
   let coinsChange = 0;
   if (error <= 0.05) {
-    livesChange = 1;
+    livesChange = state.lives < 3 ? 1 : 0;
     coinsChange = 5;
   } else if (error <= 0.10) {
     coinsChange = 1;
@@ -63,7 +63,7 @@ export function resolveRound(state, estimate) {
     livesChange = -1;
   }
 
-  const lives = state.lives + livesChange;
+  const lives = Math.min(3, state.lives + livesChange);
   const coins = state.coins + coinsChange;
   const completedRounds = state.completedRounds + 1;
   return {

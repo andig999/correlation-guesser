@@ -11,7 +11,7 @@ export const TEXTS = {
   gameRules: "Spielregeln",
   rulesTitle: "Spielregeln",
   rulesStart: "Du startest mit 3 Leben und 0 Münzen.",
-  rulesPerfect: "Fehler bis 0,05: +1 Leben und +5 Münzen.",
+  rulesPerfect: "Fehler bis 0,05: +1 Leben (höchstens 3) und +5 Münzen.",
   rulesClose: "Fehler bis 0,10: +1 Münze.",
   rulesMiss: "Fehler über 0,10: −1 Leben.",
   pearsonPrompt: "Schätze Pearson r",

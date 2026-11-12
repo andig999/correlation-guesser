@@ -1,0 +1,42 @@
+.character-frame {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  justify-content: center;
+  vertical-align: bottom;
+}
+
+.character-image {
+  display: block;
+  max-width: none;
+  image-rendering: pixelated;
+}
+
+.character-frame.wippen {
+  animation: wippen 1.8s steps(2, end) infinite;
+  transform-origin: center bottom;
+}
+
+.character-frame.huepfen {
+  animation: huepfen 600ms steps(4, end);
+  transform-origin: center bottom;
+}
+
+@keyframes wippen {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes huepfen {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-6px); }
+  50% { transform: translateY(-10px); }
+  75% { transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .character-frame.wippen,
+  .character-frame.huepfen {
+    animation: none;
+  }
+}
