@@ -20,6 +20,7 @@
       import {
         colorizeGroups,
         drawGroupRegressionLines,
+        drawRegressionLine,
         markOutlier,
         renderPlot,
       } from "./js/plot.js";
@@ -267,6 +268,18 @@
         cross.firstElementChild.getAttribute("stroke") === "currentColor"
           && cross.getAttribute("color") === cross.getAttribute("fill"));
 
+      const expectedPlotColors = new Set([
+        "#005B94", "#6F4E9C", "#805000", "#4A5568", "#0072B2", "#A65F00",
+      ]);
+      const renderedPlotColors = new Set(Array.from({ length: 6 }, (_, index) => {
+        const color = (index + 0.1) / 6;
+        const coloredPlot = renderPlot(plotContainer, simpson.points, { random: () => color });
+        return coloredPlot.querySelector(".plot-point").getAttribute("fill");
+      }));
+      check("Punktwolkenpalette vermeidet Pearson- und Spearman-Farben",
+        renderedPlotColors.size === expectedPlotColors.size
+          && [...renderedPlotColors].every((color) => expectedPlotColors.has(color)));
+
       const seededScenario = createScenario(684, 1);
       const seededPlot = renderPlot(plotContainer, seededScenario.points, {
         random: createRng(seededScenario.seed).random,
@@ -288,9 +301,23 @@
         `${point.getAttribute("fill")}:${point.firstElementChild.tagName}`
       )));
       const groupLines = drawGroupRegressionLines(groupedSvg, simpson.points, simpson.groups);
+      const overallLine = drawRegressionLine(groupedSvg, simpson.points, {
+        color: "#3F3F46",
+        className: "regression-line overall-regression-line",
+        strokeWidth: 4.5,
+        strokeDasharray: "10 7",
+      }).line;
       check("Simpson-Auflösung unterscheidet Gruppen und zeichnet drei Regressionen",
         groupStyles.size === 3 && groupLines.length === 3
-          && groupLines.every(({ b }) => Number.isFinite(b)));
+          && groupLines.every(({ b }) => Number.isFinite(b))
+          && [...groupStyles].every((style) => (
+            ["#005B94", "#6F4E9C", "#805000"].some((color) => style.startsWith(`${color}:`))
+          )));
+      check("Simpson-Gesamtgerade ist neutral, gestrichelt, dicker und zuletzt gezeichnet",
+        overallLine === groupedSvg.lastElementChild
+          && overallLine.getAttribute("stroke") === "#3F3F46"
+          && overallLine.getAttribute("stroke-width") === "4.5"
+          && overallLine.getAttribute("stroke-dasharray") === "10 7");
 
       const outlier = generateOutlier(createRng(84), 60);
       const outlierSvg = renderPlot(plotContainer, outlier.points, {

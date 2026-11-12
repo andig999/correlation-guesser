@@ -56,11 +56,13 @@ export function generateMonotonic(rng, n) {
   const x = Array.from({ length: n }, (_, index) => (
     -1 + (index + 0.5) * step + (rng.random() - 0.5) * 0.4 * step
   ));
-  const curve = x.map((value) => Math.exp(6 * (value + 1)));
-  const smallestGap = Math.min(...curve.slice(1).map((value, index) => value - curve[index]));
+  const curve = x.map((value) => Math.sinh(7 * value));
   const points = x.map((value, index) => ({
     x: value,
-    y: direction * (curve[index] + (rng.random() - 0.5) * 0.4 * smallestGap),
+    y: direction * (curve[index] + (rng.random() - 0.5) * 0.8 * Math.min(
+      index === 0 ? Infinity : curve[index] - curve[index - 1],
+      index === curve.length - 1 ? Infinity : curve[index + 1] - curve[index],
+    )),
   }));
   const scenario = buildScenario("monoton", points);
 

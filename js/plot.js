@@ -4,8 +4,8 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const VIEW_SIZE = 600;
 const PLOT = { left: 66, right: 570, top: 26, bottom: 530 };
 const TICKS = [0, 25, 50, 75, 100];
-const COLORS = ["#005B94", "#B54500", "#007A52", "#9A3D70", "#805000", "#332288"];
-const GROUP_COLORS = ["#005B94", "#B54500", "#007A52"];
+const COLORS = ["#005B94", "#6F4E9C", "#805000", "#4A5568", "#0072B2", "#A65F00"];
+const GROUP_COLORS = ["#005B94", "#6F4E9C", "#805000"];
 const SYMBOLS = ["circle", "square", "triangle", "diamond", "cross"];
 const GROUP_SYMBOLS = ["circle", "triangle", "square"];
 let nextClipId = 0;
@@ -210,7 +210,12 @@ export function renderPlot(container, points, { random } = {}) {
   return svg;
 }
 
-export function drawRegressionLine(svg, points, { color = "#172b4d", className = "regression-line" } = {}) {
+export function drawRegressionLine(svg, points, {
+  color = "#172b4d",
+  className = "regression-line",
+  strokeWidth = 2.5,
+  strokeDasharray,
+} = {}) {
   if (!(svg instanceof SVGElement) || !Array.isArray(points) || points.length < 3) {
     throw new TypeError("Expected an SVG plot and at least three points.");
   }
@@ -232,8 +237,9 @@ export function drawRegressionLine(svg, points, { color = "#172b4d", className =
     x2: end.x,
     y2: end.y,
     stroke: color,
-    "stroke-width": 2.5,
+    "stroke-width": strokeWidth,
     "stroke-linecap": "round",
+    ...(strokeDasharray ? { "stroke-dasharray": strokeDasharray } : {}),
     "clip-path": `url(#${svg.querySelector("clipPath").id})`,
     "aria-label": `Regressionsgerade, Steigung b = ${b.toFixed(2)}`,
   });

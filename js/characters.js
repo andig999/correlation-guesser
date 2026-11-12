@@ -49,6 +49,8 @@ export function createCharacterSprite(character, { pose = "ruhe", scale = 2, cla
   if (!Number.isInteger(scale) || scale < 1) {
     throw new RangeError("Der Skalierungsfaktor muss eine positive ganze Zahl sein.");
   }
+  let scaleFactor = scale;
+  let currentPose = pose;
 
   const element = document.createElement("div");
   element.className = `character-frame${className ? ` ${className}` : ""}`;
@@ -66,6 +68,7 @@ export function createCharacterSprite(character, { pose = "ruhe", scale = 2, cla
 
   function setPose(nextPose) {
     assertPose(nextPose);
+    currentPose = nextPose;
     requestNumber += 1;
     const request = requestNumber;
 
@@ -81,11 +84,11 @@ export function createCharacterSprite(character, { pose = "ruhe", scale = 2, cla
       const selectedImage = images.get(nextPose);
       image.src = selectedImage.src;
       image.alt = `${CHARACTER_LABELS[character]} – ${nextPose}`;
-      setImageSize(image, selectedImage, scale);
+      setImageSize(image, selectedImage, scaleFactor);
 
       const restPose = images.get("ruhe");
-      element.style.width = `${restPose.naturalWidth * scale}px`;
-      element.style.height = `${restPose.naturalHeight * scale}px`;
+      element.style.width = `${restPose.naturalWidth * scaleFactor}px`;
+      element.style.height = `${restPose.naturalHeight * scaleFactor}px`;
       element.classList.toggle(
         "points-right",
         className === "round-character-sprite" && character === "spearman" && nextPose === "zeigen",
@@ -104,6 +107,17 @@ export function createCharacterSprite(character, { pose = "ruhe", scale = 2, cla
     });
   }
 
+  function setScale(nextScale) {
+    if (!Number.isInteger(nextScale) || nextScale < 1) {
+      throw new RangeError("Der Skalierungsfaktor muss eine positive ganze Zahl sein.");
+    }
+    if (nextScale === scaleFactor) {
+      return imagesReady;
+    }
+    scaleFactor = nextScale;
+    return setPose(currentPose);
+  }
+
   const ready = setPose(pose);
-  return { element, image, ready, setPose };
+  return { element, image, ready, setPose, setScale };
 }

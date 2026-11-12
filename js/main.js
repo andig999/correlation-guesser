@@ -113,7 +113,9 @@ for (const character of MENU_CHARACTER_ORDER) {
   const item = document.createElement("div");
   item.className = "menu-character";
   item.setAttribute("aria-label", TEXTS.characterNames[character]);
-  const sprite = createCharacterSprite(character, { scale: 2 });
+  const sprite = createCharacterSprite(character, {
+    scale: window.innerWidth >= 900 ? 3 : 2,
+  });
   const label = document.createElement("span");
   label.className = "menu-character-name";
   label.textContent = TEXTS.characterNames[character];
@@ -121,6 +123,14 @@ for (const character of MENU_CHARACTER_ORDER) {
   elements.menuCharacters.append(item);
   menuCharacters.set(character, sprite);
 }
+
+window.addEventListener("resize", () => {
+  const scale = window.innerWidth >= 900 ? 3 : 2;
+  Promise.all([...menuCharacters.values()].map((sprite) => sprite.setScale(scale)))
+    .catch((error) => {
+      elements.menuStatus.textContent = TEXTS.charactersLoadError(error.message);
+    });
+});
 
 let roundCharacter;
 let highscoreBeatenThisGame = false;
@@ -418,6 +428,12 @@ function renderResolution(estimate, previousLives, previousCoins) {
         formatNumber(lines[index].b),
       );
       elements.groupResults.append(row);
+    });
+    drawRegressionLine(svg, scenario.points, {
+      color: "#3F3F46",
+      className: "regression-line overall-regression-line",
+      strokeWidth: 4.5,
+      strokeDasharray: "10 7",
     });
   } else {
     drawRegressionLine(svg, scenario.points, { color: "#416b38" });

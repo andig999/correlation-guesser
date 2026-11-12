@@ -7,7 +7,7 @@ export const TEXTS = {
   averageError: "Ø Fehler",
   averageErrorAccessible: "Durchschnittlicher Fehler",
   highscore: "Highscore",
-  newHighscore: "Neuer Highscore! Das Abenteuer wird gefeiert!",
+  newHighscore: "Neuer Rekord!",
   highscoreUnchanged: "Kein neuer Rekord – versuch es gleich noch einmal.",
   charactersLoading: "Die Figuren werden geladen …",
   charactersLoadError: (message) => `Figuren konnten nicht geladen werden: ${message}`,
