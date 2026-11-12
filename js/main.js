@@ -12,7 +12,9 @@ import {
   markOutlier,
   renderPlot,
 } from "./plot.js";
+import { CHARACTER_NAMES, createCharacterSprite } from "./characters.js";
 import { createRng } from "./rng.js";
+import { renderHudIcon } from "./sprites.js";
 import { pearson } from "./stats.js";
 import { APP_TITLE, explanationFor, TEXTS } from "./texts.js";
 
@@ -51,16 +53,23 @@ document.querySelector("#continue-button").textContent = TEXTS.continue;
 const elements = {
   startScreen: document.querySelector("#start-screen"),
   gameScreen: document.querySelector("#game-screen"),
+  menuCharacters: document.querySelector("#menu-characters"),
+  menuStatus: document.querySelector("#menu-status"),
+  endCharacters: document.querySelector("#end-characters"),
   startHighscore: document.querySelector("#start-highscore-value"),
   startStorageNotice: document.querySelector("#start-storage-notice"),
   startButton: document.querySelector("#start-button"),
   rulesButton: document.querySelector("#rules-button"),
   rulesCard: document.querySelector("#rules-card"),
   prompt: document.querySelector("#round-prompt"),
+  promptBoard: document.querySelector("#prompt-board"),
+  promptTitle: document.querySelector("#round-prompt-title"),
+  promptCaption: document.querySelector("#round-prompt-caption"),
+  roundCharacter: document.querySelector("#round-character"),
   lives: document.querySelector("#lives-value"),
   coins: document.querySelector("#coins-value"),
-  round: document.querySelector("#round-value"),
-  averageError: document.querySelector("#average-error-value"),
+  roundCount: document.querySelector("#round-count"),
+  averageErrorDisplay: document.querySelector("#average-error-display"),
   storageNotice: document.querySelector("#storage-notice"),
   plot: document.querySelector("#plot"),
   form: document.querySelector("#guess-form"),
@@ -68,17 +77,98 @@ const elements = {
   input: document.querySelector("#guess-input"),
   inputError: document.querySelector("#input-error"),
   resolution: document.querySelector("#resolution"),
+  resolutionTitle: document.querySelector("#resolution-title"),
+  resolutionRound: document.querySelector("#resolution-round"),
   coefficients: document.querySelector("#coefficients"),
   guessResult: document.querySelector("#guess-result"),
+  roundReward: document.querySelector("#round-reward"),
   explanation: document.querySelector("#scenario-explanation"),
   regression: document.querySelector("#regression-slope"),
   groupResults: document.querySelector("#group-results"),
   continueButton: document.querySelector("#continue-button"),
   gameOver: document.querySelector("#game-over"),
   gameOverCoins: document.querySelector("#game-over-coins"),
+  gameOverMessage: document.querySelector("#game-over-message"),
   highscore: document.querySelector("#highscore-value"),
   newGameButton: document.querySelector("#new-game-button"),
 };
+
+document.querySelectorAll("[data-icon]").forEach((element) => {
+  element.innerHTML = renderHudIcon(element.dataset.icon, 2);
+});
+
+const menuCharacters = new Map();
+for (const character of CHARACTER_NAMES) {
+  const item = document.createElement("div");
+  item.className = "menu-character";
+  item.setAttribute("aria-label", TEXTS.characterNames[character]);
+  const sprite = createCharacterSprite(character, { scale: 2 });
+  const label = document.createElement("span");
+  label.className = "menu-character-name";
+  label.textContent = TEXTS.characterNames[character];
+  item.append(sprite.element, label);
+  elements.menuCharacters.append(item);
+  menuCharacters.set(character, sprite);
+}
+
+let roundCharacter;
+let highscoreBeatenThisGame = false;
+let heartAnimationTimer;
+let coinAnimationTimer;
+let coinAnimationGeneration = 0;
+const menuButtons = [
+  document.querySelector("#start-button"),
+  document.querySelector("#rules-button"),
+];
+menuButtons.forEach((button) => {
+  button.disabled = true;
+});
+elements.menuStatus.textContent = TEXTS.charactersLoading;
+Promise.all([...menuCharacters.values()].map((sprite) => sprite.ready))
+  .then(() => {
+    elements.menuStatus.textContent = "";
+    menuButtons.forEach((button) => {
+      button.disabled = false;
+    });
+  })
+  .catch((error) => {
+    elements.menuStatus.textContent = TEXTS.charactersLoadError(error.message);
+  });
+
+function setMenuCharacters(pose, selected = CHARACTER_NAMES) {
+  for (const character of selected) {
+    void menuCharacters.get(character).setPose(pose);
+  }
+}
+
+function syncMenuCharacters() {
+  const attended = menuButtons.some((button) => (
+    button === document.activeElement || button.matches(":hover")
+  ));
+  setMenuCharacters(attended ? "zeigen" : "ruhe");
+}
+
+function playMenuAction(selectedCharacters, action) {
+  if (menuButtons.some((button) => button.disabled)) return;
+  menuButtons.forEach((button) => {
+    button.disabled = true;
+  });
+  const animations = selectedCharacters.map((character) => (
+    menuCharacters.get(character).setPose("jubel")
+  ));
+  Promise.all(animations)
+    .then(() => new Promise((resolve) => {
+      const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 600;
+      window.setTimeout(resolve, delay);
+    }))
+    .then(() => {
+      menuButtons.forEach((button) => {
+        button.disabled = false;
+      });
+      action();
+      if (!elements.startScreen.hidden) syncMenuCharacters();
+    });
+}
 
 function showStorageNotice(message) {
   elements.startStorageNotice.textContent = message;
@@ -105,6 +195,7 @@ let state = createGameState(highscore);
 function saveHighscore(value) {
   if (value <= highscore) return;
   highscore = value;
+  highscoreBeatenThisGame = true;
   try {
     localStorage.setItem(HIGH_SCORE_KEY, String(highscore));
   } catch (error) {
@@ -120,11 +211,82 @@ function formatNumber(value) {
   }).format(value);
 }
 
-function updateStatus() {
-  elements.lives.textContent = String(state.lives);
-  elements.coins.textContent = String(state.coins);
-  elements.round.textContent = String(state.round);
-  elements.averageError.textContent = state.completedRounds
+function renderHearts(previousLives = state.lives) {
+  if (heartAnimationTimer) {
+    window.clearTimeout(heartAnimationTimer);
+    heartAnimationTimer = undefined;
+  }
+  const lostLife = state.lives < previousLives;
+  const gainedLife = state.lives > previousLives;
+  const animatedSlot = lostLife ? state.lives : previousLives;
+  const slots = document.createElement("span");
+  slots.className = "lives-slots";
+  for (let index = 0; index < 3; index += 1) {
+    const icon = document.createElement("span");
+    icon.className = "icon heart-slot";
+    const broken = lostLife && index === animatedSlot;
+    const filling = gainedLife && index === animatedSlot;
+    icon.innerHTML = renderHudIcon(
+      broken ? "zerbrochenesHerz" : index < state.lives ? "vollesHerz" : "leererHerzSlot",
+      2,
+    );
+    if (broken) icon.classList.add("is-breaking");
+    if (filling) icon.classList.add("is-filling");
+    slots.append(icon);
+  }
+  elements.lives.replaceChildren(slots);
+  elements.lives.setAttribute("aria-label", `${TEXTS.lives}: ${state.lives} von 3`);
+  if (lostLife) {
+    const round = state.round;
+    const lives = state.lives;
+    heartAnimationTimer = window.setTimeout(() => {
+      if (state.round !== round || state.lives !== lives) return;
+      renderHearts();
+    }, 540);
+  }
+}
+
+function updateCoinDisplay(previousCoins = state.coins) {
+  if (coinAnimationTimer) {
+    window.clearInterval(coinAnimationTimer);
+    coinAnimationTimer = undefined;
+  }
+  coinAnimationGeneration += 1;
+  const generation = coinAnimationGeneration;
+  const display = document.createElement("span");
+  elements.coins.replaceChildren(display);
+  const icon = document.createElement("span");
+  icon.className = "icon status-icon";
+  icon.innerHTML = renderHudIcon("muenze", 2);
+  elements.coins.prepend(icon);
+  elements.coins.setAttribute("aria-label", `${TEXTS.coins}: ${state.coins}`);
+
+  if (previousCoins >= state.coins || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    display.textContent = String(state.coins);
+    return;
+  }
+
+  let visibleCoins = previousCoins;
+  display.textContent = String(visibleCoins);
+  coinAnimationTimer = window.setInterval(() => {
+    if (generation !== coinAnimationGeneration) {
+      window.clearInterval(coinAnimationTimer);
+      return;
+    }
+    visibleCoins = Math.min(state.coins, visibleCoins + 1);
+    display.textContent = String(visibleCoins);
+    if (visibleCoins === state.coins) {
+      window.clearInterval(coinAnimationTimer);
+      coinAnimationTimer = undefined;
+    }
+  }, 70);
+}
+
+function updateStatus({ previousLives = state.lives, previousCoins = state.coins } = {}) {
+  renderHearts(previousLives);
+  updateCoinDisplay(previousCoins);
+  elements.roundCount.textContent = String(state.round);
+  elements.averageErrorDisplay.textContent = state.completedRounds
     ? formatNumber(state.totalError / state.completedRounds)
     : "–";
 }
@@ -136,9 +298,18 @@ function beginRound() {
   elements.gameScreen.hidden = false;
   state = startRound(state, scenario);
   updateStatus();
-  elements.prompt.textContent = scenario.coefficient === "pearson"
+  elements.promptTitle.textContent = scenario.coefficient === "pearson"
     ? TEXTS.pearsonPrompt
     : TEXTS.spearmanPrompt;
+  elements.promptCaption.textContent = TEXTS.promptCaption;
+  elements.promptBoard.classList.toggle("coefficient-pearson", scenario.coefficient === "pearson");
+  elements.promptBoard.classList.toggle("coefficient-spearman", scenario.coefficient === "spearman");
+  elements.slider.style.setProperty(
+    "--coefficient-color",
+    scenario.coefficient === "pearson" ? "var(--pearson)" : "var(--spearman)",
+  );
+  roundCharacter = createCharacterSprite(scenario.coefficient, { pose: "ruhe", scale: 2 });
+  elements.roundCharacter.replaceChildren(roundCharacter.element);
   elements.prompt.hidden = false;
   elements.form.hidden = false;
   elements.resolution.hidden = true;
@@ -154,9 +325,9 @@ function beginRound() {
   }
 }
 
-function appendCoefficient(label, value, highlighted) {
+function appendCoefficient(label, value, highlighted, coefficient) {
   const item = document.createElement("div");
-  item.className = highlighted ? "coefficient coefficient-highlighted" : "coefficient";
+  item.className = `coefficient coefficient-${coefficient}${highlighted ? " coefficient-highlighted" : ""}`;
   const term = document.createElement("span");
   term.textContent = label;
   const number = document.createElement("strong");
@@ -165,23 +336,49 @@ function appendCoefficient(label, value, highlighted) {
   elements.coefficients.append(item);
 }
 
-function renderResolution(estimate) {
+function appendReward(icon, message) {
+  const item = document.createElement("span");
+  item.className = "reward-item";
+  const iconElement = document.createElement("span");
+  iconElement.className = "icon";
+  iconElement.innerHTML = renderHudIcon(icon, 2);
+  const text = document.createElement("span");
+  text.textContent = message;
+  item.append(iconElement, text);
+  elements.roundReward.append(item);
+}
+
+function renderResolution(estimate, previousLives, previousCoins) {
   const { scenario, result } = state;
   const svg = elements.plot.querySelector("svg");
   elements.coefficients.replaceChildren();
-  appendCoefficient(TEXTS.pearson, result.metrics.pearson, result.coefficient === "pearson");
-  appendCoefficient(TEXTS.spearman, result.metrics.spearman, result.coefficient === "spearman");
-
-  const rewards = [];
-  if (result.coinsChange) rewards.push(`+${result.coinsChange} ${TEXTS.coins}`);
-  if (result.livesChange > 0) rewards.push(`+1 ${TEXTS.life}`);
-  if (result.livesChange < 0) rewards.push(`−1 ${TEXTS.life}`);
-  if (rewards.length === 0) rewards.push(TEXTS.noChange);
-  elements.guessResult.textContent = TEXTS.roundResult(
+  appendCoefficient(TEXTS.pearson, result.metrics.pearson, result.coefficient === "pearson", "pearson");
+  appendCoefficient(TEXTS.spearman, result.metrics.spearman, result.coefficient === "spearman", "spearman");
+  elements.guessResult.textContent = TEXTS.guessResult(
     formatNumber(estimate),
     formatNumber(result.error),
-    rewards.join(", "),
   );
+  elements.roundReward.replaceChildren();
+  if (result.coinsChange > 0) {
+    appendReward("muenze", `+${result.coinsChange} ${TEXTS.coins}`);
+  }
+  if (result.livesChange > 0) {
+    appendReward("vollesHerz", `+1 ${TEXTS.life}`);
+  } else if (result.livesChange < 0) {
+    appendReward("zerbrochenesHerz", `−1 ${TEXTS.life}`);
+  }
+  if (result.coinsChange === 0 && result.livesChange === 0) {
+    const unchanged = document.createElement("span");
+    unchanged.textContent = TEXTS.noChange;
+    elements.roundReward.append(unchanged);
+  }
+
+  const outcome = result.error <= 0.05 ? "perfect" : result.error <= 0.10 ? "good" : "miss";
+  elements.resolution.dataset.outcome = outcome;
+  elements.resolutionTitle.textContent = outcome === "perfect"
+    ? TEXTS.perfectHit
+    : outcome === "good" ? TEXTS.goodHit : TEXTS.missed;
+  elements.resolutionRound.textContent = TEXTS.roundResolved(state.round);
 
   elements.explanation.textContent = explanationFor(scenario, result.metrics);
   elements.explanation.hidden = !elements.explanation.textContent;
@@ -206,17 +403,22 @@ function renderResolution(estimate) {
       elements.groupResults.append(row);
     });
   } else {
-    drawRegressionLine(svg, scenario.points);
+    drawRegressionLine(svg, scenario.points, { color: "#416b38" });
   }
   if (scenario.type === "ausreisser") {
     markOutlier(svg, scenario.outlierIndex);
   }
 
-  elements.prompt.hidden = true;
   elements.form.hidden = true;
   elements.resolution.hidden = false;
+  const reactingCharacter = roundCharacter;
+  reactingCharacter.setPose("zeigen").then(() => {
+    window.setTimeout(() => {
+      reactingCharacter.setPose(result.error <= 0.10 ? "jubel" : "enttaeuscht");
+    }, 500);
+  });
   elements.continueButton.textContent = state.lives === 0 ? TEXTS.finish : TEXTS.continue;
-  updateStatus();
+  updateStatus({ previousLives, previousCoins });
   elements.continueButton.focus();
 }
 
@@ -286,9 +488,11 @@ elements.form.addEventListener("submit", (event) => {
   elements.input.removeAttribute("aria-invalid");
   const estimate = Math.round(typedEstimate * 100) / 100;
   elements.input.value = estimate.toFixed(2);
+  const previousLives = state.lives;
+  const previousCoins = state.coins;
   state = resolveRound(state, estimate);
   saveHighscore(state.highscore);
-  renderResolution(estimate);
+  renderResolution(estimate, previousLives, previousCoins);
 });
 
 elements.continueButton.addEventListener("click", () => {
@@ -299,6 +503,20 @@ elements.continueButton.addEventListener("click", () => {
     elements.resolution.hidden = true;
     elements.gameOverCoins.textContent = String(state.coins);
     elements.highscore.textContent = String(highscore);
+    elements.gameOverMessage.textContent = highscoreBeatenThisGame
+      ? TEXTS.newHighscore
+      : TEXTS.highscoreUnchanged;
+    elements.endCharacters.replaceChildren();
+    for (const character of CHARACTER_NAMES) {
+      const item = document.createElement("span");
+      item.className = "end-character";
+      const sprite = createCharacterSprite(character, {
+        pose: character === "regression" && highscoreBeatenThisGame ? "jubel" : "ruhe",
+        scale: 2,
+      });
+      item.append(sprite.element);
+      elements.endCharacters.append(item);
+    }
     elements.gameOver.hidden = false;
     updateStatus();
     elements.newGameButton.focus();
@@ -307,15 +525,30 @@ elements.continueButton.addEventListener("click", () => {
   beginRound();
 });
 
-elements.startButton.addEventListener("click", beginRound);
+elements.startButton.addEventListener("pointerenter", syncMenuCharacters);
+elements.startButton.addEventListener("focus", syncMenuCharacters);
+elements.startButton.addEventListener("pointerleave", syncMenuCharacters);
+elements.startButton.addEventListener("blur", syncMenuCharacters);
+elements.rulesButton.addEventListener("pointerenter", syncMenuCharacters);
+elements.rulesButton.addEventListener("focus", syncMenuCharacters);
+elements.rulesButton.addEventListener("pointerleave", syncMenuCharacters);
+elements.rulesButton.addEventListener("blur", syncMenuCharacters);
+
+elements.startButton.addEventListener("click", () => {
+  highscoreBeatenThisGame = false;
+  playMenuAction(CHARACTER_NAMES, beginRound);
+});
 
 elements.rulesButton.addEventListener("click", () => {
-  const expanded = elements.rulesButton.getAttribute("aria-expanded") === "true";
-  elements.rulesButton.setAttribute("aria-expanded", String(!expanded));
-  elements.rulesCard.hidden = expanded;
+  playMenuAction(["regression"], () => {
+    const expanded = elements.rulesButton.getAttribute("aria-expanded") === "true";
+    elements.rulesButton.setAttribute("aria-expanded", String(!expanded));
+    elements.rulesCard.hidden = expanded;
+  });
 });
 
 elements.newGameButton.addEventListener("click", () => {
   state = createGameState(highscore);
+  highscoreBeatenThisGame = false;
   beginRound();
 });

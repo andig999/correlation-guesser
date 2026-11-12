@@ -7,6 +7,19 @@ export const TEXTS = {
   averageError: "Ø Fehler",
   averageErrorAccessible: "Durchschnittlicher Fehler",
   highscore: "Highscore",
+  newHighscore: "Neuer Highscore! Das Abenteuer wird gefeiert!",
+  highscoreUnchanged: "Kein neuer Rekord – versuch es gleich noch einmal.",
+  charactersLoading: "Die Figuren werden geladen …",
+  charactersLoadError: (message) => `Figuren konnten nicht geladen werden: ${message}`,
+  roundResolved: (round) => `Runde ${round} abgeschlossen`,
+  perfectHit: "Volltreffer!",
+  goodHit: "Gut!",
+  missed: "Daneben",
+  characterNames: {
+    pearson: "Pear-son",
+    spearman: "Spear-man",
+    regression: "Regression",
+  },
   startGame: "Spiel starten",
   gameRules: "Spielregeln",
   rulesTitle: "Spielregeln",
@@ -17,6 +30,7 @@ export const TEXTS = {
   pearsonPrompt: "Schätze Pearson r",
   spearmanPrompt: "Schätze Spearman ρ",
   guessLabel: "Deine Schätzung",
+  promptCaption: "Wie stark ist der Zusammenhang?",
   numberInputLabel: "Zahlenfeld für deine Schätzung",
   submitGuess: "Schätzung bestätigen",
   continue: "Weiter",
@@ -43,6 +57,9 @@ export const TEXTS = {
   ),
   roundResult: (estimate, error, rewards) => (
     `${TEXTS.estimate}: ${estimate} · ${TEXTS.error}: ${error}. ${rewards}.`
+  ),
+  guessResult: (estimate, error) => (
+    `${TEXTS.estimate}: ${estimate} · ${TEXTS.error}: ${error}.`
   ),
   scenarioExplanations: {
     monotonIncreasing: "Die Punkte steigen durchgehend, aber nicht auf einer Geraden. Spearman bewertet die Rangfolge und liegt deshalb näher an +1.",

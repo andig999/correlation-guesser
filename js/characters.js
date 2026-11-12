@@ -73,16 +73,7 @@ export function createCharacterSprite(character, { pose = "ruhe", scale = 2, cla
       clearTimeout(hopTimer);
       hopTimer = undefined;
     }
-    element.classList.remove("huepfen");
-    element.classList.toggle("wippen", nextPose === "ruhe");
-
-    if (nextPose === "jubel") {
-      element.classList.add("huepfen");
-      hopTimer = setTimeout(() => {
-        element.classList.remove("huepfen");
-        hopTimer = undefined;
-      }, 600);
-    }
+    element.classList.remove("huepfen", "wippen");
 
     return imagesReady.then((images) => {
       if (request !== requestNumber) return;
@@ -96,6 +87,17 @@ export function createCharacterSprite(character, { pose = "ruhe", scale = 2, cla
       const frameHeight = Math.max(...[...images.values()].map((item) => item.naturalHeight)) * scale;
       element.style.width = `${frameWidth}px`;
       element.style.height = `${frameHeight}px`;
+
+      if (nextPose === "ruhe") {
+        element.classList.add("wippen");
+      } else if (nextPose === "jubel") {
+        void element.offsetWidth;
+        element.classList.add("huepfen");
+        hopTimer = setTimeout(() => {
+          element.classList.remove("huepfen");
+          hopTimer = undefined;
+        }, 600);
+      }
     });
   }
 

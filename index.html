@@ -3,14 +3,18 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="./css/characters.css">
     <link rel="stylesheet" href="./css/style.css">
     <title></title>
   </head>
   <body>
     <main id="app" class="app">
       <section id="start-screen" class="start-screen">
+        <p class="title-mark">Ein Abenteuer der Statistik</p>
         <h1 id="app-title"></h1>
-        <p><span id="start-highscore-label"></span>: <strong id="start-highscore-value"></strong></p>
+        <div id="menu-characters" class="menu-characters" aria-label="Die drei Figuren"></div>
+        <p id="menu-status" class="menu-status" role="status"></p>
+        <p class="menu-highscore"><span id="start-highscore-label"></span>: <span class="icon" data-icon="muenze"></span> <strong id="start-highscore-value"></strong></p>
         <p id="start-storage-notice" class="storage-notice" role="status"></p>
         <div class="start-actions">
           <button id="start-button" type="button"></button>
@@ -31,12 +35,18 @@
           <dl class="game-status" aria-live="polite">
             <div><dt id="lives-label"></dt><dd id="lives-value"></dd></div>
             <div><dt id="coins-label"></dt><dd id="coins-value"></dd></div>
-            <div><dt id="round-label"></dt><dd id="round-value"></dd></div>
-            <div><dt id="average-error-label"></dt><dd id="average-error-value"></dd></div>
+            <div><dt id="round-label"></dt><dd id="round-value"><span class="icon status-icon" data-icon="fahne"></span><span id="round-count"></span></dd></div>
+            <div><dt id="average-error-label"></dt><dd id="average-error-value"><span class="icon status-icon" data-icon="zielscheibe"></span><span id="average-error-display"></span></dd></div>
           </dl>
           <p id="storage-notice" class="storage-notice" role="status"></p>
         </div>
-        <h2 id="round-prompt" class="round-prompt"></h2>
+        <div id="round-prompt" class="prompt-row">
+          <div id="round-character" class="prompt-character"></div>
+          <h2 id="prompt-board" class="prompt-board">
+            <span id="round-prompt-title"></span>
+            <small id="round-prompt-caption"></small>
+          </h2>
+        </div>
         <div id="plot" class="plot-container"></div>
         <form id="guess-form" class="guess-form">
           <label id="guess-label" for="guess-slider"></label>
@@ -50,18 +60,22 @@
         </form>
         <section id="resolution" class="resolution" aria-live="polite" hidden>
           <h2 id="resolution-title"></h2>
+          <p id="resolution-round" class="resolution-round"></p>
           <div id="coefficients" class="coefficients"></div>
-          <p id="guess-result"></p>
+          <p id="guess-result" class="guess-result"></p>
+          <div id="round-reward" class="round-reward"></div>
           <p id="regression-slope" class="regression-slope"></p>
           <div id="group-results" class="group-results"></div>
           <p id="scenario-explanation" class="scenario-explanation"></p>
           <button id="continue-button" type="button"></button>
         </section>
         <section id="game-over" class="game-over" aria-live="polite" hidden>
+          <p class="title-mark">Das Abenteuer ist geschafft</p>
           <h2 id="game-over-title"></h2>
-          <p id="game-over-message"></p>
-          <p><span id="game-over-coins-label"></span>: <strong id="game-over-coins"></strong></p>
-          <p><span id="highscore-label"></span>: <strong id="highscore-value"></strong></p>
+          <div id="end-characters" class="end-characters" aria-label="Die drei Figuren"></div>
+          <p id="game-over-message" class="end-message"></p>
+          <p class="end-score"><span id="game-over-coins-label"></span><span class="icon" data-icon="muenze"></span> <strong id="game-over-coins"></strong></p>
+          <p class="end-highscore"><span id="highscore-label"></span>: <strong id="highscore-value"></strong></p>
           <button id="new-game-button" type="button"></button>
         </section>
       </section>
