@@ -1,10 +1,19 @@
 export const CHARACTER_NAMES = ["pearson", "spearman", "regression"];
-export const CHARACTER_POSES = ["ruhe", "zeigen", "jubel", "enttaeuscht"];
+export const CHARACTER_POSES = [
+  "ruhe",
+  "zeigen",
+  "jubel",
+  "enttaeuscht",
+  "nachdenken",
+  "erklaeren",
+  "ueberrascht",
+  "winken",
+];
 
 const CHARACTER_LABELS = {
   pearson: "Pear-Son",
   spearman: "Spear-Man",
-  regression: "Regressions-Magier",
+  regression: "Regressions-Magierin",
 };
 
 const characterImages = new Map();
@@ -119,5 +128,14 @@ export function createCharacterSprite(character, { pose = "ruhe", scale = 2, cla
   }
 
   const ready = setPose(pose);
-  return { element, image, ready, setPose, setScale };
+  return {
+    element,
+    image,
+    ready,
+    setPose,
+    setScale,
+    get pose() {
+      return currentPose;
+    },
+  };
 }

@@ -10,11 +10,11 @@
   <body>
     <main id="app" class="app">
       <section id="start-screen" class="start-screen">
-        <p class="title-mark">Ein Abenteuer der Statistik</p>
+        <p class="title-mark"><span class="icon" data-icon="birne"></span><span>Ein Abenteuer der Statistik</span><span class="icon" data-icon="birne"></span></p>
         <h1 id="app-title"></h1>
         <div id="menu-characters" class="menu-characters" aria-label="Die drei Figuren"></div>
         <p id="menu-status" class="menu-status" role="status"></p>
-        <p class="menu-highscore"><span id="start-highscore-label"></span>: <span class="icon" data-icon="muenze"></span> <strong id="start-highscore-value"></strong></p>
+        <p class="menu-highscore"><span class="icon" data-icon="pokal"></span><span id="start-highscore-label"></span>: <strong id="start-highscore-value"></strong></p>
         <p id="start-storage-notice" class="storage-notice" role="status"></p>
         <div class="start-actions">
           <button id="start-button" type="button"></button>
@@ -87,9 +87,11 @@
           <div id="end-characters" class="end-characters" aria-label="Die drei Figuren"></div>
           <p id="game-over-message" class="end-message"></p>
           <p class="end-score"><span id="game-over-coins-label"></span><span class="icon" data-icon="muenze"></span> <strong id="game-over-coins"></strong></p>
-          <p class="end-highscore"><span id="highscore-label"></span>: <strong id="highscore-value"></strong></p>
-          <button id="new-game-button" type="button"></button>
-          <button id="main-menu-button" type="button"></button>
+          <p class="end-highscore"><span class="icon" data-icon="pokal"></span><span id="highscore-label"></span>: <strong id="highscore-value"></strong></p>
+          <div class="end-actions">
+            <button id="new-game-button" type="button"></button>
+            <button id="main-menu-button" type="button"></button>
+          </div>
         </div>
       </section>
     </main>

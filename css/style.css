@@ -347,7 +347,8 @@ input:focus-visible {
 .prompt-row {
   display: flex;
   min-width: 0;
-  height: 7rem;
+  /* Platz für die Ruhe-Pose (bis 74 px × 2); höhere Posen ragen begrenzt darüber hinaus (SPEC Abschnitt 9). */
+  height: 9.5rem;
   align-items: flex-end;
   gap: 0.55rem;
   margin: 0;
@@ -919,4 +920,103 @@ input:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Pixel-Icons aus assets/icons/ (SPEC Abschnitt 10, „Icons“).
+   Größe = Originalpixel × ganzzahliger Faktor --icon-scale. */
+.pixel-icon {
+  display: block;
+  flex: 0 0 auto;
+  width: calc(var(--icon-w, 20) * var(--icon-scale, 1) * 1px);
+  height: calc(var(--icon-h, 20) * var(--icon-scale, 1) * 1px);
+  image-rendering: pixelated;
+}
+
+.has-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.title-mark,
+.end-highscore,
+.end-score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.lives-slots .heart-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(22px * var(--icon-scale, 1));
+  height: calc(20px * var(--icon-scale, 1));
+}
+
+.prompt-board #round-prompt-title.has-icon {
+  display: flex;
+}
+
+.prompt-board #round-prompt-title > span {
+  display: inline;
+}
+
+.coefficient-term {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+#resolution-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.scenario-explanation.has-icon {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.scenario-explanation.has-icon .pixel-icon {
+  margin-top: 0.1rem;
+}
+
+@media (min-width: 56.25rem) and (min-height: 40rem) {
+  .game-status,
+  .menu-highscore,
+  .end-highscore,
+  .end-score {
+    --icon-scale: 2;
+  }
+}
+
+@media (max-width: 56.249rem), (orientation: portrait) {
+  /* Breitere Posen (zeigen, jubel, winken) ragen zur Seite heraus und dürfen nicht am Fensterrand abgeschnitten werden. */
+  .prompt-row {
+    padding-left: 1.5rem;
+  }
+}
+
+/* Endbildschirm: beide Buttons in einer Zeile, auf gleicher Höhe. */
+.end-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+}
+
+.end-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  margin: 0;
 }

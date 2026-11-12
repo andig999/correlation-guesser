@@ -14,7 +14,7 @@ import {
 } from "./plot.js";
 import { CHARACTER_NAMES, createCharacterSprite } from "./characters.js";
 import { createRng } from "./rng.js";
-import { renderHudIcon } from "./sprites.js";
+import { createIcon, preloadIcons, setIconLabel } from "./icons.js";
 import { pearson } from "./stats.js";
 import { APP_TITLE, explanationFor, TEXTS } from "./texts.js";
 
@@ -42,7 +42,7 @@ document.querySelector("#average-error-value").setAttribute("aria-label", TEXTS.
 document.querySelector("#guess-label").textContent = TEXTS.guessLabel;
 document.querySelector("#guess-input").setAttribute("aria-label", TEXTS.numberInputLabel);
 document.querySelector("#submit-guess").textContent = TEXTS.submitGuess;
-document.querySelector("#menu-button").textContent = TEXTS.menu;
+setIconLabel(document.querySelector("#menu-button"), "burg", TEXTS.menu);
 document.querySelector("#menu-confirmation-text").textContent = TEXTS.abandonPrompt;
 document.querySelector("#menu-confirm-yes").textContent = TEXTS.yes;
 document.querySelector("#menu-confirm-no").textContent = TEXTS.no;
@@ -52,8 +52,8 @@ document.querySelector("#game-over-message").textContent = TEXTS.gameOverMessage
 document.querySelector("#game-over-coins-label").textContent = TEXTS.gameOverCoins;
 document.querySelector("#highscore-label").textContent = TEXTS.highscore;
 document.querySelector("#new-game-button").textContent = TEXTS.newGame;
-document.querySelector("#main-menu-button").textContent = TEXTS.mainMenu;
-document.querySelector("#continue-button").textContent = TEXTS.continue;
+setIconLabel(document.querySelector("#main-menu-button"), "burg", TEXTS.mainMenu);
+setIconLabel(document.querySelector("#continue-button"), "pfeil", TEXTS.continue);
 
 const elements = {
   startScreen: document.querySelector("#start-screen"),
@@ -104,7 +104,10 @@ const elements = {
 };
 
 document.querySelectorAll("[data-icon]").forEach((element) => {
-  element.innerHTML = renderHudIcon(element.dataset.icon, 2);
+  element.replaceChildren(createIcon(element.dataset.icon));
+});
+preloadIcons().catch((error) => {
+  elements.menuStatus.textContent = error.message;
 });
 
 const menuCharacters = new Map();
@@ -115,6 +118,8 @@ for (const character of MENU_CHARACTER_ORDER) {
   item.setAttribute("aria-label", TEXTS.characterNames[character]);
   const sprite = createCharacterSprite(character, {
     scale: window.innerWidth >= 900 ? 3 : 2,
+    // Spear-Man steht ganz rechts und blickt gespiegelt zur Mitte (SPEC Abschnitt 10, „Hauptmenü“).
+    className: character === "spearman" ? "mirrored" : "",
   });
   const label = document.createElement("span");
   label.className = "menu-character-name";
@@ -151,18 +156,66 @@ Promise.all([...menuCharacters.values()].map((sprite) => sprite.ready))
     menuButtons.forEach((button) => {
       button.disabled = false;
     });
+    greetMenu();
   })
   .catch((error) => {
     elements.menuStatus.textContent = TEXTS.charactersLoadError(error.message);
   });
 
+// Einzelne Posen werden im Hauptmenü ersetzt (SPEC Abschnitt 10, „Hauptmenü“):
+// Spear-Mans Lanzenstoß wirkt wie ein Angriff, der Stab der Magierin würde in Spear-Man hineinragen,
+// Pear-Sons Winken-Bild ist fehlerhaft (Birne schwebt).
+const MENU_POSE_OVERRIDES = {
+  zeigen: { spearman: "winken", regression: "erklaeren" },
+  winken: { pearson: "jubel" },
+};
+
 function setMenuCharacters(pose, selected = CHARACTER_NAMES) {
   for (const character of selected) {
-    void menuCharacters.get(character).setPose(pose);
+    const actualPose = MENU_POSE_OVERRIDES[pose]?.[character] ?? pose;
+    void menuCharacters.get(character).setPose(actualPose);
   }
 }
 
+const GREETING_DURATION = 1000;
+const THINKING_DELAY = 4000;
+let greetingTimer;
+let thinkingTimer;
+
+// Hauptmenü: beim Öffnen einmal kurz winken, danach Ruhe bzw. Zeigen (SPEC Abschnitt 10).
+function greetMenu() {
+  window.clearTimeout(greetingTimer);
+  setMenuCharacters("winken");
+  greetingTimer = window.setTimeout(() => {
+    greetingTimer = undefined;
+    if (!elements.startScreen.hidden) syncMenuCharacters();
+  }, GREETING_DURATION);
+}
+
+// Schätzphase: nach 4 s ohne Eingabe nachdenken, bei der nächsten Eingabe zurück zur Ruhe.
+function cancelThinking() {
+  window.clearTimeout(thinkingTimer);
+  thinkingTimer = undefined;
+}
+
+function scheduleThinking() {
+  cancelThinking();
+  thinkingTimer = window.setTimeout(() => {
+    thinkingTimer = undefined;
+    if (state.phase === "guess" && roundCharacter && !elements.form.hidden) {
+      void roundCharacter.setPose("nachdenken");
+    }
+  }, THINKING_DELAY);
+}
+
+function registerGuessActivity() {
+  if (state.phase !== "guess" || !roundCharacter) return;
+  if (roundCharacter.pose === "nachdenken") void roundCharacter.setPose("ruhe");
+  scheduleThinking();
+}
+
 function syncMenuCharacters() {
+  if (greetingTimer) return;
   const attended = menuButtons.some((button) => (
     button === document.activeElement || button.matches(":hover")
   ));
@@ -174,6 +227,8 @@ function playMenuAction(selectedCharacters, action) {
   menuButtons.forEach((button) => {
     button.disabled = true;
   });
+  window.clearTimeout(greetingTimer);
+  greetingTimer = undefined;
   const animations = selectedCharacters.map((character) => (
     menuCharacters.get(character).setPose("jubel")
   ));
@@ -247,10 +302,9 @@ function renderHearts(previousLives = state.lives) {
     icon.className = "icon heart-slot";
     const broken = lostLife && index === animatedSlot;
     const filling = gainedLife && index === animatedSlot;
-    icon.innerHTML = renderHudIcon(
-      broken ? "zerbrochenesHerz" : index < state.lives ? "vollesHerz" : "leererHerzSlot",
-      2,
-    );
+    icon.append(createIcon(
+      broken ? "herz-gebrochen" : index < state.lives ? "herz-voll" : "herz-leer",
+    ));
     if (broken) icon.classList.add("is-breaking");
     if (filling) icon.classList.add("is-filling");
     slots.append(icon);
@@ -278,7 +332,7 @@ function updateCoinDisplay(previousCoins = state.coins) {
   elements.coins.replaceChildren(display);
   const icon = document.createElement("span");
   icon.className = "icon status-icon";
-  icon.innerHTML = renderHudIcon("muenze", 2);
+  icon.append(createIcon("muenze"));
   elements.coins.prepend(icon);
   elements.coins.setAttribute("aria-label", `${TEXTS.coins}: ${state.coins}`);
 
@@ -321,9 +375,11 @@ function beginRound() {
   elements.menuConfirmation.hidden = true;
   state = startRound(state, scenario);
   updateStatus();
-  elements.promptTitle.textContent = scenario.coefficient === "pearson"
-    ? TEXTS.pearsonPrompt
-    : TEXTS.spearmanPrompt;
+  setIconLabel(
+    elements.promptTitle,
+    scenario.coefficient === "pearson" ? "linie" : "treppe",
+    scenario.coefficient === "pearson" ? TEXTS.pearsonPrompt : TEXTS.spearmanPrompt,
+  );
   elements.promptCaption.textContent = TEXTS.promptCaption;
   elements.promptBoard.classList.toggle("coefficient-pearson", scenario.coefficient === "pearson");
   elements.promptBoard.classList.toggle("coefficient-spearman", scenario.coefficient === "spearman");
@@ -345,18 +401,20 @@ function beginRound() {
   elements.input.value = "0.00";
   elements.slider.value = "0";
   renderPlot(elements.plot, scenario.points, { random: createRng(scenario.seed).random });
-  elements.continueButton.textContent = TEXTS.continue;
+  setIconLabel(elements.continueButton, "pfeil", TEXTS.continue);
   if (window.matchMedia("(pointer: fine)").matches) {
     elements.input.focus();
     elements.input.select();
   }
+  scheduleThinking();
 }
 
 function appendCoefficient(label, value, highlighted, coefficient) {
   const item = document.createElement("div");
   item.className = `coefficient coefficient-${coefficient}${highlighted ? " coefficient-highlighted" : ""}`;
   const term = document.createElement("span");
-  term.textContent = label;
+  term.className = "coefficient-term";
+  term.append(createIcon(coefficient === "pearson" ? "linie" : "treppe"), document.createTextNode(label));
   const number = document.createElement("strong");
   number.textContent = formatNumber(value);
   item.append(term, number);
@@ -368,7 +426,7 @@ function appendReward(icon, message) {
   item.className = "reward-item";
   const iconElement = document.createElement("span");
   iconElement.className = "icon";
-  iconElement.innerHTML = renderHudIcon(icon, 2);
+  iconElement.append(createIcon(icon));
   const text = document.createElement("span");
   text.textContent = message;
   item.append(iconElement, text);
@@ -390,9 +448,9 @@ function renderResolution(estimate, previousLives, previousCoins) {
     appendReward("muenze", `+${result.coinsChange} ${TEXTS.coins}`);
   }
   if (result.livesChange > 0) {
-    appendReward("vollesHerz", `+1 ${TEXTS.life}`);
+    appendReward("herz-voll", `+1 ${TEXTS.life}`);
   } else if (result.livesChange < 0) {
-    appendReward("zerbrochenesHerz", `−1 ${TEXTS.life}`);
+    appendReward("herz-gebrochen", `−1 ${TEXTS.life}`);
   }
   if (result.coinsChange === 0 && result.livesChange === 0) {
     const unchanged = document.createElement("span");
@@ -402,13 +460,27 @@ function renderResolution(estimate, previousLives, previousCoins) {
 
   const outcome = result.error <= 0.05 ? "perfect" : result.error <= 0.10 ? "good" : "miss";
   elements.resolution.dataset.outcome = outcome;
-  elements.resolutionTitle.textContent = outcome === "perfect"
+  const outcomeText = outcome === "perfect"
     ? TEXTS.perfectHit
     : outcome === "good" ? TEXTS.goodHit : TEXTS.missed;
+  if (scenario.type === "normal") {
+    elements.resolutionTitle.textContent = outcomeText;
+  } else {
+    const hint = createIcon("hinweis", { className: "special-case-icon", label: TEXTS.specialCase });
+    hint.title = TEXTS.specialCase;
+    const text = document.createElement("span");
+    text.textContent = outcomeText;
+    elements.resolutionTitle.replaceChildren(hint, text);
+  }
   elements.resolutionRound.textContent = TEXTS.roundResolved(state.round);
 
-  elements.explanation.textContent = explanationFor(scenario, result.metrics);
-  elements.explanation.hidden = !elements.explanation.textContent;
+  const explanation = explanationFor(scenario, result.metrics);
+  if (explanation) {
+    setIconLabel(elements.explanation, "gluehbirne", explanation);
+  } else {
+    elements.explanation.replaceChildren();
+  }
+  elements.explanation.hidden = !explanation;
   elements.regression.textContent = `${TEXTS.regressionSlope}: ${formatNumber(result.metrics.regression.b)}`;
   elements.groupResults.replaceChildren();
 
@@ -457,7 +529,7 @@ function renderResolution(estimate, previousLives, previousCoins) {
         });
     }, 500);
   });
-  elements.continueButton.textContent = state.lives === 0 ? TEXTS.finish : TEXTS.continue;
+  setIconLabel(elements.continueButton, "pfeil", state.lives === 0 ? TEXTS.finish : TEXTS.continue);
   updateStatus({ previousLives, previousCoins });
   elements.continueButton.focus();
 }
@@ -515,8 +587,13 @@ function adjustGuessWithArrowKey(event) {
 elements.input.addEventListener("keydown", adjustGuessWithArrowKey);
 elements.slider.addEventListener("keydown", adjustGuessWithArrowKey);
 
+["input", "keydown", "pointerdown"].forEach((type) => {
+  elements.form.addEventListener(type, registerGuessActivity);
+});
+
 elements.form.addEventListener("submit", (event) => {
   event.preventDefault();
+  cancelThinking();
   const normalized = elements.input.value.trim().replace(",", ".");
   const typedEstimate = Number(normalized);
   if (!normalized || !Number.isFinite(typedEstimate) || typedEstimate < -1 || typedEstimate > 1) {
@@ -611,6 +688,8 @@ elements.menuConfirmYes.addEventListener("click", () => {
   elements.gameOverScreen.hidden = true;
   elements.startScreen.hidden = false;
   elements.startHighscore.textContent = String(highscore);
+  cancelThinking();
+  greetMenu();
   elements.startButton.focus();
 });
 
@@ -620,5 +699,6 @@ elements.mainMenuButton.addEventListener("click", () => {
   elements.gameOverScreen.hidden = true;
   elements.startScreen.hidden = false;
   elements.startHighscore.textContent = String(highscore);
+  greetMenu();
   elements.startButton.focus();
 });

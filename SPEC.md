@@ -1,8 +1,8 @@
-# SPEC: Correlation Guesser (Arbeitstitel)
+# SPEC: Correlation-Quest
 
 Stand: 11.11.2026. Abschnitte 1–8: Version 1 (umgesetzt). Abschnitte 9–11: Version 1.1, Layout und Design (jetzt umsetzen, hat bei Widersprüchen Vorrang). Abschnitt 12: Version 1.2, Didaktik (erst später umsetzen).
 
-Der Name ist ein Arbeitstitel. Er steht nur an einer Stelle, als Konstante `APP_TITLE` in `js/texts.js`. index.html, Seitentitel und Überschriften lesen ihn von dort, damit eine spätere Umbenennung nur eine Zeile ändert.
+Der Name des Spiels ist „Correlation-Quest“ (bis 12.11.2026 Arbeitstitel „Correlation Guesser“; Repo und GitHub-Pages-Adresse heißen weiterhin `correlation-guesser`). Er steht nur an einer Stelle, als Konstante `APP_TITLE` in `js/texts.js`. index.html, Seitentitel und Überschriften lesen ihn von dort, damit eine spätere Umbenennung nur eine Zeile ändert.
 
 ## 1. Zweck und Zielgruppe
 
@@ -187,50 +187,71 @@ Pixel-Art-Rollenspiel-Stil. Das Tool soll wie ein kleines Spiel wirken und nicht
 
 ### Figuren
 
-Drei Figuren im Pixel-Art-Stil mit je vier Posen, als fertige PNG-Dateien mit transparentem Hintergrund in `assets/sprites/`. Copilot erzeugt oder verändert diese Bilder nicht, sondern bindet sie nur ein.
+Drei Figuren im Pixel-Art-Stil mit je acht Posen, als fertige PNG-Dateien mit transparentem Hintergrund in `assets/sprites/`. Copilot erzeugt oder verändert diese Bilder nicht, sondern bindet sie nur ein.
 
-Dateinamen: `<figur>-<pose>.png` mit Figur `pearson`, `spearman`, `regression` und Pose `ruhe`, `zeigen`, `jubel`, `enttaeuscht`.
+Dateinamen: `<figur>-<pose>.png`
 
-| Figur | ruhe | zeigen | jubel | enttaeuscht |
-|---|---|---|---|---|
-| Pear-son (Bauer mit Birne) | steht, hält Birne | Hand nach rechts ausgestreckt | Birne hochgehalten | Platzhalter |
-| Spear-man (Speerträger) | Speer aufrecht | Speer waagrecht nach rechts | Platzhalter | Platzhalter |
-| Regression (Zauberer) | steht mit Stab | Hand nach rechts ausgestreckt | Faust und Stab erhoben | Platzhalter |
+- Figuren: `pearson` (Beschriftung „Pear-Son“, Bauer mit Birne), `spearman` („Spear-Man“, Speerträger), `regression` („Regressions-Magierin“, Magierin mit Stab)
+- Posen: `ruhe`, `zeigen`, `jubel`, `enttaeuscht`, `nachdenken`, `erklaeren`, `ueberrascht`, `winken`
 
-- Platzhalter sind graue Silhouetten der Ruhe-Pose mit Fragezeichen. Sie werden später durch echte Bilder mit gleichem Dateinamen ersetzt. Der Code darf deshalb keine Annahmen über die Bildgröße fest einbauen.
-- Die Bilder sind echte Pixel-Art in Originalgröße (ca. 33–80 × 56–82 px, alle im selben Maßstab). Darstellung immer mit ganzzahligem Faktor (z. B. 2×, 3× oder 4× je nach Bildschirm) und `image-rendering: pixelated`. Breite und Höhe zur Laufzeit aus `naturalWidth`/`naturalHeight` berechnen.
+- Die Bilder sind echte Pixel-Art in Originalgröße (ca. 40–86 × 59–76 px, alle im selben Maßstab). Darstellung immer mit ganzzahligem Faktor (z. B. 2× oder 3× je nach Bildschirm) und `image-rendering: pixelated`. Breite und Höhe zur Laufzeit aus `naturalWidth`/`naturalHeight` berechnen.
 - Ausrichtung: unten bündig, damit beim Wechsel der Pose nichts springt. Manche Posen sind breiter oder höher als die Ruhe-Pose.
 - Zusätzliche Bewegung nur über CSS: leichtes Wippen bei „ruhe“, kurzes Hüpfen beim Wechsel auf „jubel“. Bei `prefers-reduced-motion` ohne Bewegung.
+- In Version 1.1 genutzt: ruhe, zeigen, jubel, enttaeuscht, nachdenken, winken, im Hauptmenü zusätzlich erklaeren (Magierin). Für Version 1.2 vorgesehen: erklaeren, ueberrascht.
+- `pearson-winken.png` ist fehlerhaft (die Birne schwebt neben der Hüfte) und wird nicht verwendet, bis ein korrigiertes Bild vorliegt. Stattdessen nutzt Pear-Son dort „jubel“.
+
+### Icons
+
+15 Icons als PNG in `assets/icons/`, gleicher Stil wie die Figuren, Originalgröße ca. 17–27 px. Darstellung ganzzahlig skaliert (meist 2×) mit `image-rendering: pixelated`, Maße aus `naturalWidth`/`naturalHeight`.
+
+| Datei | Verwendung |
+|---|---|
+| `herz-voll.png`, `herz-leer.png`, `herz-gebrochen.png` | Herz-Slots im HUD, gebrochen kurz beim Verlust |
+| `muenze.png` | Münzen im HUD und in der Rückmeldung |
+| `fahne.png` | Runde im HUD |
+| `zielscheibe.png` | Ø-Fehler im HUD |
+| `pokal.png` | Highscore im Hauptmenü und auf dem Endbildschirm, neuer Rekord |
+| `birne.png` | Dekoration, z. B. im Titel |
+| `linie.png` | festes Symbol für Pearson (grün), im Aufgabenschild und bei r in der Auflösung |
+| `treppe.png` | festes Symbol für Spearman (rot), im Aufgabenschild und bei ρ in der Auflösung |
+| `gluehbirne.png` | vor dem Erklärtext in der Auflösung |
+| `schriftrolle.png` | derzeit nicht verwendet (Button und Karte „Spielregeln“ bleiben ohne Icon) |
+| `hinweis.png` | in der Auflösung von Sonderfall-Runden (monoton, Ausreißer, U-Form, Simpson) neben der Überschrift |
+| `burg.png` | Buttons „Menü“ und „Hauptmenü“ |
+| `pfeil.png` | Button „Weiter“ |
 
 ### Figuren im Spiel
 
 - In jeder Runde steht nur die Figur des gefragten Koeffizienten neben dem Aufgabenschild („Schätze Pearson r“ bzw. „Schätze Spearman ρ“): Pear-son bei Pearson, Spear-man bei Spearman. Die Figur steht links vom Schild, damit „zeigen“ auf das Schild zeigt.
-- Während des Schätzens: „ruhe“.
+- Während des Schätzens: „ruhe“. Nach 4 s ohne Eingabe wechselt die Figur auf „nachdenken“, bei der nächsten Eingabe zurück auf „ruhe“.
 - Beim Bestätigen der Schätzung: kurz (ca. 0,5 s) „zeigen“.
 - In der Auflösung: Fehler ≤ 0,10 „jubel“, Fehler > 0,10 „enttaeuscht“.
 - Auf schmalen Bildschirmen kleinerer Faktor (2×). Die Figur darf den Plot nicht verdrängen.
 
-### Regression (Zauberer)
+### Regression (Magierin)
 
-Der Zauberer erscheint in Version 1.1 nur im Hauptmenü und auf dem Endbildschirm. Eine eigene Aufgabe im Spiel bekommt er erst, wenn die Steigung eingeführt wird (siehe Abschnitt 12, „Offen“). Erklärtexte stehen weiterhin ohne Figur in der Auflösung.
+Die Magierin erscheint in Version 1.1 nur im Hauptmenü und auf dem Endbildschirm. Eine eigene Aufgabe im Spiel bekommt sie erst, wenn die Steigung eingeführt wird (siehe Abschnitt 12, „Offen“). Erklärtexte stehen weiterhin ohne Figur in der Auflösung.
 
 ### Endbildschirm
 
 - Alle drei Figuren. Neuer Highscore: alle „jubel“. Sonst: alle „enttaeuscht“.
+- Die Buttons „Neues Spiel“ und „Hauptmenü“ stehen nebeneinander in einer Zeile, gleich hoch und auf gleicher Höhe ausgerichtet.
 - Überschrift „Spiel beendet“, darunter je nach Ergebnis „Neuer Rekord!“ oder „Kein neuer Rekord – versuch es gleich noch einmal.“ Kein Text, der Erfolg behauptet, wenn es keinen gab.
 
 ### Hauptmenü
 
-- Alle drei Figuren stehen nebeneinander in „ruhe“, darüber der Titel, darunter die Buttons.
-- Liegt der Mauszeiger oder der Tastaturfokus auf einem Button, wechseln die Figuren auf „zeigen“.
+- Alle drei Figuren stehen nebeneinander, Reihenfolge Pear-Son, Regressions-Magierin, Spear-Man. Darüber der Titel, darunter die Buttons.
+- Spear-Man steht ganz rechts und ist horizontal gespiegelt, sodass er zur Mitte blickt.
+- Beim Öffnen des Hauptmenüs grüßen die Figuren einmal kurz (ca. 1 s), danach „ruhe“: Magierin und Spear-Man „winken“, Pear-Son „jubel“ (siehe Hinweis zu `pearson-winken.png`).
+- Liegt der Mauszeiger oder der Tastaturfokus auf einem Button: Pear-Son „zeigen“ (hält die Birne hin), Magierin „erklaeren“, Spear-Man „winken“. Spear-Mans „zeigen“ (Lanzenstoß) und der ausgestreckte Stab der Magierin würden im Menü wie ein Angriff auf die Nachbarfigur wirken und werden dort nicht verwendet.
 - Bei Klick auf einen Button wechseln sie ca. 0,6 s auf „jubel“, dann folgt die Aktion des Buttons. „Spiel starten“: alle drei. „Spielregeln“: nur Regression.
 
 ### Buttons und Oberfläche
 
 - Buttons nur so breit wie ihr Inhalt, nie über die ganze Breite. Kompakt, mit dickem dunklem Pixelrahmen und Pixelschatten nach unten. Beim Drücken sinkt der Button sichtbar ein.
 - Farben aus der RPG-Welt: Pergament als helle Grundfläche, Braun und gedecktes Blau als Rahmen und Akzente. Heller Grund, weil dunkle Flächen auf Hörsaal-Beamern oft blass wirken.
-- Statusleiste als Spiel-HUD: Leben als drei feste Herz-Slots, volle Herzen für vorhandene Leben, leere Slots für verlorene (z. B. 1 Leben: ein volles, zwei leere Herzen). Beim Verlust zerbricht das Herz kurz und wird dann zum leeren Slot, beim Gewinn füllt sich ein leerer Slot. Dazu Pixel-Münze mit Zahl, Runde, Ø-Fehler.
-- HUD-Icons als kleine Pixel-Raster (16 × 16) in `js/sprites.js`. Keine Emojis, keine externen Icon-Fonts oder CDNs.
+- Statusleiste als Spiel-HUD: Leben als drei feste Herz-Slots (Icons aus `assets/icons/`), volle Herzen für vorhandene Leben, leere Slots für verlorene (z. B. 1 Leben: ein volles, zwei leere Herzen). Beim Verlust zerbricht das Herz kurz und wird dann zum leeren Slot, beim Gewinn füllt sich ein leerer Slot. Dazu Pixel-Münze mit Zahl, Runde, Ø-Fehler.
+- Icons ausschließlich aus `assets/icons/` (siehe „Icons“). Keine Emojis, keine externen Icon-Fonts oder CDNs.
 - Fließtext in Systemschrift, keine Pixelschrift für Text.
 - Feste Farbe für jeden Koeffizienten, überall gleich (Aufgabenschild, Slider, Werte in der Auflösung, Regressionslinie): Pearson in Birnengrün, Spearman in Waffenrock-Rot, jeweils so abgedunkelt, dass Text darauf gut lesbar ist. Die Punktwolke darf diese Farben nicht verwenden.
 - Rückmeldung je Runde: Stufe als große Überschrift („Volltreffer!“ bei ≤ 0,05, „Gut!“ bei ≤ 0,10, „Daneben“ bei > 0,10), Münzen zählen sichtbar hoch, Herz kommt animiert dazu oder zerbricht.
@@ -241,8 +262,9 @@ Der Zauberer erscheint in Version 1.1 nur im Hauptmenü und auf dem Endbildschir
 
 ```
 assets/sprites/*.png  Figuren (siehe Abschnitt 10), nicht verändern
-js/sprites.js         Pixel-Raster für HUD-Icons, Render-Funktion
-sprites-preview.html  Vorschau aller Figuren und Icons
+assets/icons/*.png    Icons (siehe Abschnitt 10), nicht verändern
+js/characters.js      Figuren anzeigen, Posen wechseln
+sprites-preview.html  Vorschau aller Figuren, Posen und Icons
 design-preview.html   Designentwürfe, wird nach der Auswahl gelöscht
 ```
 

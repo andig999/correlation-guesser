@@ -1,4 +1,4 @@
-export const APP_TITLE = "Correlation Guesser";
+export const APP_TITLE = "Correlation-Quest";
 
 export const TEXTS = {
   round: "Runde",
@@ -15,10 +15,11 @@ export const TEXTS = {
   perfectHit: "Volltreffer!",
   goodHit: "Gut!",
   missed: "Daneben",
+  specialCase: "Sonderfall",
   characterNames: {
     pearson: "Pear-Son",
     spearman: "Spear-Man",
-    regression: "Regressions-Magier",
+    regression: "Regressions-Magierin",
   },
   startGame: "Spiel starten",
   gameRules: "Spielregeln",
