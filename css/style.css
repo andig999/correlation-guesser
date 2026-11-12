@@ -1020,3 +1020,106 @@ input:focus-visible {
   min-height: 3rem;
   margin: 0;
 }
+
+/* Ergebnisskala (SPEC Abschnitt 12) */
+.result-scale {
+  margin: 0.1rem 0 0;
+}
+
+.result-scale-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.result-scale-track {
+  stroke: #55402a;
+  stroke-width: 2;
+}
+
+.result-scale-tick {
+  stroke: #55402a;
+  stroke-width: 1.2;
+}
+
+.result-scale-tick-label {
+  fill: #6b5536;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.result-scale-pearson .result-scale-band-wide { fill: var(--pearson-paper); }
+.result-scale-pearson .result-scale-band-narrow { fill: color-mix(in srgb, var(--pearson) 28%, var(--pearson-paper)); }
+.result-scale-spearman .result-scale-band-wide { fill: var(--spearman-paper); }
+.result-scale-spearman .result-scale-band-narrow { fill: color-mix(in srgb, var(--spearman) 25%, var(--spearman-paper)); }
+
+.result-scale-marker {
+  stroke: #fff;
+  stroke-width: 1.2;
+}
+
+.marker-pearson { fill: var(--pearson); }
+.marker-spearman { fill: var(--spearman); }
+.marker-estimate { fill: #2f2418; }
+
+.result-scale-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.1rem 0.9rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #554832;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+.legend-estimate .legend-swatch {
+  background: #2f2418;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.legend-pearson .legend-swatch {
+  border-radius: 50%;
+  background: var(--pearson);
+}
+
+.legend-spearman .legend-swatch {
+  background: var(--spearman);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+/* Die Runde steht bereits in der Statusleiste; in der Auflösung spart das eine Zeile für die Ergebnisskala. */
+.resolution .resolution-round {
+  display: none;
+}
+
+/* Schätzung/Fehler und Belohnung in einer Zeile, damit die Auflösung samt Ergebnisskala ohne Scrollen passt. */
+.result-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem 0.6rem;
+}
+
+.result-row .guess-result {
+  flex: 1 1 12rem;
+  margin: 0;
+}
+
+.result-row .round-reward {
+  flex: 0 0 auto;
+  margin: 0;
+}

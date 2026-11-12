@@ -16,6 +16,12 @@ export const TEXTS = {
   goodHit: "Gut!",
   missed: "Daneben",
   specialCase: "Sonderfall",
+  scaleEstimate: "Deine Schätzung",
+  scalePearson: "Pearson r",
+  scaleSpearman: "Spearman ρ",
+  scaleAria: (estimate, pearson, spearman) => (
+    `Ergebnisskala von −1 bis 1: deine Schätzung ${estimate}, Pearson r ${pearson}, Spearman ρ ${spearman}`
+  ),
   characterNames: {
     pearson: "Pear-Son",
     spearman: "Spear-Man",

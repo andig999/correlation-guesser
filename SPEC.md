@@ -198,7 +198,7 @@ Dateinamen: `<figur>-<pose>.png`
 - Ausrichtung: unten bündig, damit beim Wechsel der Pose nichts springt. Manche Posen sind breiter oder höher als die Ruhe-Pose.
 - Zusätzliche Bewegung nur über CSS: leichtes Wippen bei „ruhe“, kurzes Hüpfen beim Wechsel auf „jubel“. Bei `prefers-reduced-motion` ohne Bewegung.
 - In Version 1.1 genutzt: ruhe, zeigen, jubel, enttaeuscht, nachdenken, winken, im Hauptmenü zusätzlich erklaeren (Magierin). Für Version 1.2 vorgesehen: erklaeren, ueberrascht.
-- `pearson-winken.png` ist fehlerhaft (die Birne schwebt neben der Hüfte) und wird nicht verwendet, bis ein korrigiertes Bild vorliegt. Stattdessen nutzt Pear-Son dort „jubel“.
+- `pearson-winken.png` ist fehlerhaft (die Birne schwebt neben der Hüfte) und wird nicht verwendet, bis ein korrigiertes Bild vorliegt. Stattdessen nutzt Pear-Son dort „nachdenken“.
 
 ### Icons
 
@@ -242,7 +242,7 @@ Die Magierin erscheint in Version 1.1 nur im Hauptmenü und auf dem Endbildschir
 
 - Alle drei Figuren stehen nebeneinander, Reihenfolge Pear-Son, Regressions-Magierin, Spear-Man. Darüber der Titel, darunter die Buttons.
 - Spear-Man steht ganz rechts und ist horizontal gespiegelt, sodass er zur Mitte blickt.
-- Beim Öffnen des Hauptmenüs grüßen die Figuren einmal kurz (ca. 1 s), danach „ruhe“: Magierin und Spear-Man „winken“, Pear-Son „jubel“ (siehe Hinweis zu `pearson-winken.png`).
+- Beim Öffnen des Hauptmenüs grüßen die Figuren einmal kurz (ca. 1 s), danach „ruhe“: Magierin und Spear-Man „winken“, Pear-Son „nachdenken“ (siehe Hinweis zu `pearson-winken.png`).
 - Liegt der Mauszeiger oder der Tastaturfokus auf einem Button: Pear-Son „zeigen“ (hält die Birne hin), Magierin „erklaeren“, Spear-Man „winken“. Spear-Mans „zeigen“ (Lanzenstoß) und der ausgestreckte Stab der Magierin würden im Menü wie ein Angriff auf die Nachbarfigur wirken und werden dort nicht verwendet.
 - Bei Klick auf einen Button wechseln sie ca. 0,6 s auf „jubel“, dann folgt die Aktion des Buttons. „Spiel starten“: alle drei. „Spielregeln“: nur Regression.
 

@@ -15,6 +15,7 @@ import {
 import { CHARACTER_NAMES, createCharacterSprite } from "./characters.js";
 import { createRng } from "./rng.js";
 import { createIcon, preloadIcons, setIconLabel } from "./icons.js";
+import { createResultScale } from "./resultscale.js";
 import { pearson } from "./stats.js";
 import { APP_TITLE, explanationFor, TEXTS } from "./texts.js";
 
@@ -90,6 +91,7 @@ const elements = {
   resolutionTitle: document.querySelector("#resolution-title"),
   resolutionRound: document.querySelector("#resolution-round"),
   coefficients: document.querySelector("#coefficients"),
+  resultScale: document.querySelector("#result-scale"),
   guessResult: document.querySelector("#guess-result"),
   roundReward: document.querySelector("#round-reward"),
   explanation: document.querySelector("#scenario-explanation"),
@@ -164,10 +166,10 @@ Promise.all([...menuCharacters.values()].map((sprite) => sprite.ready))
 
 // Einzelne Posen werden im Hauptmenü ersetzt (SPEC Abschnitt 10, „Hauptmenü“):
 // Spear-Mans Lanzenstoß wirkt wie ein Angriff, der Stab der Magierin würde in Spear-Man hineinragen,
-// Pear-Sons Winken-Bild ist fehlerhaft (Birne schwebt).
+// Pear-Sons Winken-Bild ist fehlerhaft (Birne schwebt), er denkt stattdessen nach.
 const MENU_POSE_OVERRIDES = {
   zeigen: { spearman: "winken", regression: "erklaeren" },
-  winken: { pearson: "jubel" },
+  winken: { pearson: "nachdenken" },
 };
 
 function setMenuCharacters(pose, selected = CHARACTER_NAMES) {
@@ -439,6 +441,22 @@ function renderResolution(estimate, previousLives, previousCoins) {
   elements.coefficients.replaceChildren();
   appendCoefficient(TEXTS.pearson, result.metrics.pearson, result.coefficient === "pearson", "pearson");
   appendCoefficient(TEXTS.spearman, result.metrics.spearman, result.coefficient === "spearman", "spearman");
+  elements.resultScale.replaceChildren(createResultScale({
+    estimate,
+    pearson: result.metrics.pearson,
+    spearman: result.metrics.spearman,
+    asked: result.coefficient,
+    labels: {
+      estimate: TEXTS.scaleEstimate,
+      pearson: TEXTS.scalePearson,
+      spearman: TEXTS.scaleSpearman,
+      ariaLabel: TEXTS.scaleAria(
+        formatNumber(estimate),
+        formatNumber(result.metrics.pearson),
+        formatNumber(result.metrics.spearman),
+      ),
+    },
+  }));
   elements.guessResult.textContent = TEXTS.guessResult(
     formatNumber(estimate),
     formatNumber(result.error),
