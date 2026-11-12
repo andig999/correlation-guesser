@@ -1,4 +1,4 @@
-# Correlation Guesser
+# Correlation-Quest
 
 Ein Lerntool im Pixel-Art-RPG-Stil zum Schätzen von Pearson-Korrelation und Spearman-Rangkorrelation anhand von Punktwolken. Im Spiel reagieren die Figuren auf Schätzungen; Herz- und Münz-Icons zeigen Leben und Belohnungen.
 

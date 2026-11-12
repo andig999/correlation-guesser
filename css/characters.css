@@ -17,6 +17,10 @@
   image-rendering: pixelated;
 }
 
+.character-frame.mirrored .character-image {
+  transform: translateX(-50%) scaleX(-1);
+}
+
 .character-frame.points-right .character-image {
   left: 0;
   transform: none;
